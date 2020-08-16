@@ -1,0 +1,616 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="huyinglin">
+  <meta name="keywords" content="">
+  <title>CSS的解析和计算 - Faz Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Faz Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/owl.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-16 00:42" pubdate>
+      2020年8月16日 凌晨
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      27
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">CSS的解析和计算</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>通过上一篇《DOM 的解析》，我们已经知道当浏览器接收到 HTML 文本后，会将它解析成 Token ，再构建成 DOM 树。下面我们继续分析浏览器渲染流程的样式计算，即 CSS的解析和计算。</p>
+<h3 id="一、收集CSS规则"><a href="#一、收集CSS规则" class="headerlink" title="一、收集CSS规则"></a>一、收集CSS规则</h3><p>浏览器开始处理 CSS 的第一步就是收集 CSS 规则。CSS 的规则来源有三种：</p>
+<ol>
+<li>内联规则</li>
+<li>外联规则</li>
+<li>行内规则</li>
+</ol>
+<p>如果浏览器遇到了一个 <code>&lt;link&gt;</code> 标签，<code>rel</code> 属性是 <code>stylesheet</code>，那么它会触发资源加载，根据标签里的 <code>href</code> 属性下载该资源。这个加载是异步的，不会影响DOM树的构建。</p>
+<p>当遇到一个<code>&lt;style&gt;</code> 标签，整个<code>&lt;style&gt;</code> 标签解析结束的时候，浏览器会收集<code>&lt;style&gt;</code> 标签里的规则，存到一个地方。行内样式不收集。</p>
+<p>收集完 CSS 规则后，会解析 CSS 。具体过程还是先进行词法分析，生成 Token。和 HTML 解析不同的是，CSS 词法分析后，还需要进行语法分析。解析后会生成相应的规则对象，并push到规则数组中。对象的内容可以通过 <code>document.styleSheets</code> 查看。</p>
+<img src="/2020/08/16/CSS%E7%9A%84%E8%A7%A3%E6%9E%90%E5%92%8C%E8%AE%A1%E7%AE%97/css1.png" srcset="/img/loading.gif" class="">
+
+<h3 id="二、解析CSS选择器"><a href="#二、解析CSS选择器" class="headerlink" title="二、解析CSS选择器"></a>二、解析CSS<strong>选择器</strong></h3><p>此时，CSS 规则已经被解析并放到一个规则数组里了。那么什么时候开始计算 CSS 呢？</p>
+<p>通常情况下，当 HTML 解析完一个开始标签后就开始计算 CSS。原因是 CSS4 之前，不支持父选择器。所以在一个开始标签解析完后，所有的样式规则都已经收集完毕（一些特殊情况除外，如：style标签写在 body 里，这样会重新计算）。</p>
+<p>CSS 规则的选择器是从右向左匹配。从右向左匹配时，如果当前元素不匹配，就可以直接跳过了。如果从左向右，要等到匹配最后一个选择器才能知道当前元素是否匹配。显然从右向左匹配效率会更高。</p>
+<p>举个例子：</p>
+<pre><code class="hljs html"><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">style</span>&gt;</span>
+      body div img &#123;
+        width: 500px;
+        height: 300px;
+      &#125;
+    <span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> /&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span></code></pre>
+
+<p>上面代码中的 <code>&lt;style&gt;</code> 里的内容，大体会被解析成如下格式：</p>
+<pre><code class="hljs html">rule: &#123;
+    type: &#x27;rule&#x27;,
+  selectors: [&#x27;body div img&#x27;],
+  declarations: [&#123;
+    type: &#x27;declaration&#x27;,
+    property: &#x27;width&#x27;,
+    value: &#x27;500px&#x27;,
+  &#125;, &#123;
+    type: &#x27;declaration&#x27;,
+    property: &#x27;height&#x27;,
+    value: &#x27;300px&#x27;,
+  &#125;],
+&#125;</code></pre>
+
+<p>selectors 是这条规则的选择器，declarations 是这条规则的内容。下面我们来看看，当解析完 <code>&lt;img/&gt;</code> 时，会如何计算 <code>&lt;img/&gt;</code> 的 CSS 规则。</p>
+<h3 id="三、拆分选择器"><a href="#三、拆分选择器" class="headerlink" title="三、拆分选择器"></a>三、<strong>拆分选择器</strong></h3><p>CSS 选择器由简单到复杂可以分成以下几种。</p>
+<ul>
+<li>简单选择器：针对某一特征判断是否选中元素。</li>
+<li>复合选择器：连续写在一起的简单选择器，针对元素自身特征选择单个元素。</li>
+<li>复杂选择器：由“（空格）”、“ &gt;”、“ ~”、“ +”、“ ||”等符号连接的复合选择器，根据父元素或者前序元素检查单个元素。</li>
+<li>选择器列表：由逗号分隔的复杂选择器，表示“或”的关系。</li>
+</ul>
+<p>示例代码中的 <code>selectors: [&#39;body div img&#39;]</code> 是由空格连接的复杂选择器。空格表示匹配子孙元素。复杂选择器显然是不能直接匹配标签的，所以要把这个复杂选择器拆分。我们可以把标签名拆分出来：</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">const</span> selectorParts = [<span class="hljs-string">&#x27;body&#x27;</span>, <span class="hljs-string">&#x27;div&#x27;</span>, <span class="hljs-string">&#x27;img&#x27;</span>];</code></pre>
+
+<h3 id="四、选择器匹配"><a href="#四、选择器匹配" class="headerlink" title="四、选择器匹配"></a>四、<strong>选择器匹配</strong></h3><p>下一步就要匹配这些选择器了。当解析完 <code>&lt;img /&gt;</code> 后，浏览器会取 selectorParts 的最后一项：’img’，和当前元素 match。match 函数里实现了判断各种选择器是否和元素匹配。match 函数实现大体如下：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">match</span>(<span class="hljs-params">element, selector</span>) </span>&#123;
+  <span class="hljs-comment">// element: &#123;</span>
+  <span class="hljs-comment">//   type: &#x27;element&#x27;,</span>
+  <span class="hljs-comment">//   tagName: &#x27;img&#x27;,</span>
+  <span class="hljs-comment">//   children: [],</span>
+  <span class="hljs-comment">//   attributes: [&#123;</span>
+  <span class="hljs-comment">//     name: &#x27;id&#x27;,</span>
+  <span class="hljs-comment">//     value: &#x27;myid&#x27;</span>
+  <span class="hljs-comment">//   &#125;, &#123;</span>
+  <span class="hljs-comment">//     name: &#x27;class&#x27;,</span>
+  <span class="hljs-comment">//     value: &#x27;myclass&#x27;</span>
+    <span class="hljs-comment">//   &#125;],</span>
+  <span class="hljs-comment">// &#125;</span>
+  <span class="hljs-comment">//</span>
+  <span class="hljs-comment">// selector: &#x27;img&#x27;</span>
+
+  <span class="hljs-keyword">if</span> (selector.charAt(<span class="hljs-number">0</span>) === <span class="hljs-string">&#x27;#&#x27;</span>) &#123;
+        <span class="hljs-comment">// id选择器</span>
+    <span class="hljs-keyword">const</span> attr = element.attributes.filter(<span class="hljs-function"><span class="hljs-params">attr</span> =&gt;</span> attr.name === <span class="hljs-string">&#x27;id&#x27;</span>)[<span class="hljs-number">0</span>];
+    <span class="hljs-keyword">if</span> (attr &amp;&amp; attr.value === selector.replace(<span class="hljs-string">&#x27;#&#x27;</span>, <span class="hljs-string">&#x27;&#x27;</span>)) &#123;
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    &#125;
+  &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (selector.charAt(<span class="hljs-number">0</span>) === <span class="hljs-string">&#x27;.&#x27;</span>) &#123;
+        <span class="hljs-comment">// class选择器</span>
+    <span class="hljs-keyword">const</span> attr = element.attributes.filter(<span class="hljs-function"><span class="hljs-params">attr</span> =&gt;</span> attr.name === <span class="hljs-string">&#x27;class&#x27;</span>)[<span class="hljs-number">0</span>];
+    <span class="hljs-keyword">if</span> (attr &amp;&amp; <span class="hljs-keyword">typeof</span> attr.value === <span class="hljs-string">&#x27;string&#x27;</span>) &#123;
+      <span class="hljs-comment">// 处理空格的多个class选择器</span>
+      <span class="hljs-keyword">const</span> classList = attr.value.split(<span class="hljs-string">&#x27; &#x27;</span>);
+      <span class="hljs-keyword">if</span> (classList.includes(selector.replace(<span class="hljs-string">&#x27;.&#x27;</span>, <span class="hljs-string">&#x27;&#x27;</span>))) &#123;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+      &#125;
+    &#125;
+    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> () &#123;
+     <span class="hljs-comment">// 其他选择器</span>
+         ......
+  &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (element.tagName === selector) &#123;
+        <span class="hljs-comment">// 标签选择器</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+  &#125;
+  <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+&#125;</code></pre>
+
+<p>如果匹配。下一步就是取 selectorParts 的倒数第二项：’div’，看是否和 img 标签的父元素匹配。就这样依次匹配 selectorParts 中的元素，直到结束。如果一直匹配，则表示选择器匹配了当前元素。选择器下的 CSS 规则就会添加到这个元素中。</p>
+<h3 id="五、根据权重（Specificity）计算最终的-ComputedStyle"><a href="#五、根据权重（Specificity）计算最终的-ComputedStyle" class="headerlink" title="五、根据权重（Specificity）计算最终的 ComputedStyle"></a>五、根据权重（Specificity）计算最终的 ComputedStyle</h3><p>接下来就到了计算权重的时候了。在 HTML 标准中，对于样式权重，描述的比较模糊。标准是对于不同的选择器，使用不同数量级的数字来计算权重。在比较早的 IE 中是使用 10 倍或者更多倍数来计算权重。这样做的问题就是如果有足够数量的低权重选择器，就会覆盖高权重的选择器。</p>
+<p>所以现代浏览器，会使用一个四位的数组来表示权重，第一位权重最高，逐渐递减。</p>
+<p>一般数组的第一位表示行内样式，第二位表示 id 选择器，第三位表示 class 选择器，第四位表示  tagName 选择器。</p>
+<p>这样在比较权重时是同级别与同级别比较，不会出现数量多而导致的权重覆盖问题。如果将来有新标准，调整数组的大小和位置就能满足要求。</p>
+<p>下面我们来看一下代码如何实现：</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">if</span> (matched) &#123;
+  <span class="hljs-keyword">const</span> sp = specificity(rule.selectors[<span class="hljs-number">0</span>]);
+  <span class="hljs-keyword">const</span> computedStyle = element.computedStyle;
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> declaration <span class="hljs-keyword">of</span> rule.declarations) &#123;
+    <span class="hljs-keyword">if</span> (!computedStyle[declaration.property]) &#123;
+      computedStyle[declaration.property] = &#123;&#125;;
+    &#125;
+    <span class="hljs-keyword">if</span> (
+      !computedStyle[declaration.property].specificity ||
+      compara(computedStyle[declaration.property].specificity, sp) &lt; <span class="hljs-number">0</span>
+    ) &#123;
+      computedStyle[declaration.property].value = declaration.value;
+      computedStyle[declaration.property].specificity = sp;
+    &#125;
+  &#125;
+&#125;</code></pre>
+
+<p>如果选择器匹配了当前规则那么，就要根据权重来计算 computedStyle。</p>
+<p>我们来看一下 specificity 函数是如何实现的：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">specificity</span>(<span class="hljs-params">selector</span>) </span>&#123;
+  <span class="hljs-comment">// p[0]: inline-style</span>
+  <span class="hljs-comment">// p[1]: id</span>
+  <span class="hljs-comment">// p[2]: class</span>
+  <span class="hljs-comment">// p[3]: tagName</span>
+  <span class="hljs-keyword">let</span> p = [<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>];
+  <span class="hljs-keyword">const</span> selectorParts = selector.split(<span class="hljs-string">&#x27; &#x27;</span>);
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> part <span class="hljs-keyword">of</span> selectorParts) &#123;
+    <span class="hljs-keyword">if</span> (part.charAt(<span class="hljs-number">0</span>) === <span class="hljs-string">&#x27;#&#x27;</span>) &#123;
+      p[<span class="hljs-number">1</span>] += <span class="hljs-number">1</span>;
+    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (part.charAt(<span class="hljs-number">0</span>) === <span class="hljs-string">&#x27;.&#x27;</span>) &#123;
+      p[<span class="hljs-number">2</span>] += <span class="hljs-number">1</span>;
+    &#125; <span class="hljs-keyword">else</span> &#123;
+      p[<span class="hljs-number">3</span>] += <span class="hljs-number">1</span>;
+    &#125;
+  &#125;
+  <span class="hljs-keyword">return</span> p;
+&#125;</code></pre>
+
+<p>首先，新建一个长度为 4 的数组 p。里面的每一位存放的就是上面提到的四个不同权重选择器的值。每当匹配到一个选择器，这个选择器的值就加一。本文只是实现最基础的选择器，在真实的浏览器中还要处理更复杂的复合选择器等逻辑。不过处理的方式都是一样的。</p>
+<p>下一步就是遍历 cssRules 里的每条规则了。如果在 computedStyle 中这条规则没有 specificity 属性，说明这条规则还没计算过权重，要把这个规则加上权重和值。</p>
+<p>如果有 specificity 属性，那么就要和当前的选择器权重进行比较，compara 函数的实现如下：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">compara</span>(<span class="hljs-params">sp1, sp2</span>) </span>&#123;
+  <span class="hljs-keyword">if</span> (sp1[<span class="hljs-number">0</span>] - sp2[<span class="hljs-number">0</span>]) &#123;
+    <span class="hljs-keyword">return</span> sp1[<span class="hljs-number">0</span>] - sp2[<span class="hljs-number">0</span>];
+  &#125;
+  <span class="hljs-keyword">if</span> (sp1[<span class="hljs-number">1</span>] - sp2[<span class="hljs-number">1</span>]) &#123;
+    <span class="hljs-keyword">return</span> sp1[<span class="hljs-number">1</span>] - sp2[<span class="hljs-number">1</span>];
+  &#125;
+  <span class="hljs-keyword">if</span> (sp1[<span class="hljs-number">2</span>] - sp2[<span class="hljs-number">2</span>]) &#123;
+    <span class="hljs-keyword">return</span> sp1[<span class="hljs-number">2</span>] - sp2[<span class="hljs-number">2</span>];
+  &#125;
+  <span class="hljs-keyword">return</span> sp1[<span class="hljs-number">3</span>] - sp2[<span class="hljs-number">3</span>];
+&#125;</code></pre>
+
+<p>逻辑很简单，就是逐位对比。用相同级别的选择器去做比较。比较出权重的大小后，按权重大小判断是否应该添加该规则。</p>
+<h3 id="important"><a href="#important" class="headerlink" title="!important"></a>!important</h3><p>另外关于权重还有一个很常见的语法就是 !important。!important 会直接覆盖上述的那几类选择器。但是 !important 不是 CSS 标准。一般来说，在业务开发中，严禁使用 !important，除非是修复紧急线上 bug，在正常的业务开发中，使用 !important 会给调试带来巨大的麻烦。那么如何覆盖 !important 呢？!important 同样可以写多个，数量多的会覆盖数量少的。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>通过遍历每条 CSS 规则，然后计算权重，再比较权重，从而算出最终的 ComputedStyle。到此，浏览器是如何将 CSS 从一条条规则变成后面布局及渲染所需要的 ComputedStyle 规则的原理揭示出来了。本文是以实现一个 ToyCSSParser 的形式来展示浏览器解析 CSS 规则的原理，现实中浏览器要处理的规则和情况会复杂的多。但整体原理不变，不过复杂度大大增加。本文源码如下：</p>
+<a href="https://github.com/huyinglin/ToyBrowser/blob/master/parser/cssParser.js" title="" target="">huyinglin&#x2F;ToyBrowser</a>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/CSS/">CSS</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Chrome浏览器架构</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/14/DOM%E6%A0%91%E7%9A%84%E6%9E%84%E5%BB%BA/">
+                        <span class="hidden-mobile">DOM树的构建</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "CSS的解析和计算&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

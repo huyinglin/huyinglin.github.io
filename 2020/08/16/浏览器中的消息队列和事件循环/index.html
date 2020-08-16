@@ -1,0 +1,581 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="huyinglin">
+  <meta name="keywords" content="">
+  <title>浏览器中的消息队列和事件循环 - Faz Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Faz Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/owl.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-16 15:52" pubdate>
+      2020年8月16日 下午
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.7k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      28
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">浏览器中的消息队列和事件循环</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>前面我们讲到了每个渲染进程都有一个主线程，并且主线程非常繁忙，既要处理 DOM，又要计算样式，还要处理布局，同时还需要处理 JavaScript 任务以及各种输入事件。要让这么多不同类型的任务在主线程中有条不紊地执行，这就需要一个系统来统筹调度这些任务，这个统筹调度系统就是我们今天要讲的消息队列和事件循环系统。</p>
+<h2 id="使用单线程处理安排好的任务"><a href="#使用单线程处理安排好的任务" class="headerlink" title="使用单线程处理安排好的任务"></a>使用单线程处理安排好的任务</h2><p>我们先从最简单的场景讲起，比如有如下一系列的任务：</p>
+<ul>
+<li>任务 1：1+2</li>
+<li>任务 2：20/5</li>
+<li>任务 3：7*8</li>
+<li>任务 4：打印出任务 1、任务 2、任务 3 的运算结果</li>
+</ul>
+<p>现在要在一个线程中去执行这些任务，通常我们会这样编写代码：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MainThread</span>(<span class="hljs-params"></span>)</span>&#123;
+     <span class="hljs-keyword">const</span> num1 = <span class="hljs-number">1</span>+<span class="hljs-number">2</span>; <span class="hljs-comment">//任务1</span>
+     <span class="hljs-keyword">const</span> num2 = <span class="hljs-number">20</span>/<span class="hljs-number">5</span>; <span class="hljs-comment">//任务2</span>
+     <span class="hljs-keyword">const</span> num3 = <span class="hljs-number">7</span>*<span class="hljs-number">8</span>; <span class="hljs-comment">//任务3</span>
+     <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;最终计算的值为:&quot;</span>,num,num2,num3)； <span class="hljs-comment">//任务4</span>
+&#125;</code></pre>
+
+<p>在上面的执行代码中，我们把所有任务代码按照顺序写进主线程里，等线程执行时，这些任务会按照顺序在线程中依次被执行；等所有任务执行完成之后，线程会自动退出。可以参考下图来直观地理解下其执行过程：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/img.png" srcset="/img/loading.gif" class="">
+
+<p>第一版：线程的一次执行</p>
+<h2 id="在线程运行过程中处理新任务"><a href="#在线程运行过程中处理新任务" class="headerlink" title="在线程运行过程中处理新任务"></a>在线程运行过程中处理新任务</h2><p>但是呢，实际情况并不是所有的任务都是在执行之前统一安排好的，大部分情况下，新的任务是在线程运行过程中产生的。比如在线程执行的过程中，又接收到了一个新的任务要求计算 “10 + 2” ，那这种方式就无法处理这种情况。</p>
+<p>那么我们如果想处理这种情况，就需要把上面这个过程循环起来。具体来说，<strong>就是要在线程运行过程中，能接收并执行新任务，这样就需要采用事件循环机制。</strong></p>
+<p>最简单的就是使用一个for循环来监听是否有新的任务，如下面的示例代码：</p>
+<pre><code class="hljs jsx"><span class="hljs-comment">//getInput</span>
+<span class="hljs-comment">//等待用户从键盘输入一个数字，并返回该输入的数字</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getInput</span>(<span class="hljs-params"></span>)</span>&#123;
+        <span class="hljs-comment">// ...</span>
+    <span class="hljs-keyword">return</span> input_number;
+&#125;
+
+<span class="hljs-comment">//主线程(Main Thread)</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MainThread</span>(<span class="hljs-params"></span>)</span>&#123;
+     <span class="hljs-keyword">for</span>(;;)&#123;
+          <span class="hljs-keyword">const</span> first_num = getInput()；
+          <span class="hljs-keyword">const</span> second_num = getInput()；
+          result_num = first_num + second_num;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;最终计算的值为:%d&quot;</span>,result_num)；
+      &#125;
+&#125;</code></pre>
+
+<p> 相较于第一版的线程，这一版的线程做了两点改进。</p>
+<ul>
+<li><strong>第一点引入了循环机制</strong>，具体的实现就是加了一个for循环，线程会一直循环执行。</li>
+<li><strong>第二点引入了事件</strong>，可以在线程运行过程中，等待用户输入的数字，等待过程中线程处于暂停阶段，一旦接收到用户输入的信息，那么线程会被激活，然后执行相加运算，最后输出结果。</li>
+</ul>
+<p>通过引入事件循环机制，就可以让该线程“活”起来了。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/img1.png" srcset="/img/loading.gif" class="">
+
+<p>第二版：在线程中引入事件循环</p>
+<h2 id="处理其他线程发送过来的任务"><a href="#处理其他线程发送过来的任务" class="headerlink" title="处理其他线程发送过来的任务"></a>处理其他线程发送过来的任务</h2><p>上面我们改进了线程的执行方式，引入了事件循环机制，可以让其在执行过程中接收新的的任务。不过在第二版的线程模型中，所有的任务都是来自线程内部的，如果另一个线程想让这个线程执行一个任务，上面这种线程模型是无法做到的。</p>
+<p>那么下面我们就来看看其他线程是如何发送消息给渲染主线程的。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/img2.png" srcset="/img/loading.gif" class="">
+
+<p>渲染进程线程之间发送任务</p>
+<p>在这个图里可以看出，渲染主进程会频繁收到IO线程的一些任务，接收到这些任务之后，渲染主进程就要处理这些任务。</p>
+<p>比如，收到资源加载完成的消息后，渲染主进程就要开始进行DOM解析了；收到鼠标点击的消息后，渲染主进程就要开始执行相应的JS脚本来处理该点击事件。</p>
+<p>那么如何设计好一个线程模型，能让其能够接收其他线程发送的消息呢？</p>
+<p>一个通用模式是使用<strong>消息队列</strong>。在解释如何实现之前，我们先说说什么是消息队列。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/img3.png" srcset="/img/loading.gif" class="">
+
+<p><strong>消息队列是一种数据结构，可以存放要执行的任务。</strong></p>
+<p>它符合队列“<strong>先进先出</strong>”的特点。也就是说要添加任务的话，会被添加到队列的尾部；要取任务的话，会从队列的头部取。</p>
+<p>有了队列之后，我们就可以继续改造线程模型了，改造方案如下。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/img4.png" srcset="/img/loading.gif" class="">
+
+<p>第三版线程模型：队列 + 循环</p>
+<p>从图中可以看出，我们的改造可以分为三个步骤：</p>
+<ol>
+<li>添加一个消息队列</li>
+<li>IO 线程中产生的新任务会添加进消息队列的尾部</li>
+<li>渲染主线程会循环的从消息队列头部读取任务，执行任务</li>
+</ol>
+<p>那么我们现在就可以来改造第三版的线程模型了。</p>
+<p>首先，构造一个队列。</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">const</span> taskQueue = [];</code></pre>
+
+<p>然后，我们再改造主线程，让主线程从队列中读取任务：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MainThread</span>(<span class="hljs-params"></span>)</span>&#123;
+  <span class="hljs-keyword">for</span>(;;)&#123;
+    <span class="hljs-keyword">const</span> task = taskQueue.shift();
+        <span class="hljs-keyword">if</span> (task) &#123;
+                ProcessTask(task);
+        &#125;
+  &#125;
+&#125;</code></pre>
+
+<p>在这段代码中，我们添加了一个消息队列的数组，然后在主线程的 for 循环中，从消息队列中读取一个任务，然后执行该任务，主线程就这样一直循环往下执行。所以只要消息队列中有任务，主线程就会去执行。</p>
+<p>主线程的代码就这样改造完了。这样改造后，主线程执行的任务都全部从消息队列中获取。<strong>所以如果有其他线程想要发送任务让主线程去执行，只需要将任务添加到该消息队列中就可以了</strong>，添加任务的代码如下：</p>
+<pre><code class="hljs jsx">taskQueue.push(Task)</code></pre>
+
+<p>另外，由于是多个线程操作同一个消息队列，所以在添加任务和取出任务的时候还会加上一个同步锁。关于锁呢，在JS的单线程环境下我们基本不会碰到，有兴趣的同学可以了解一下。</p>
+<h2 id="处理其他进程发送过来的任务"><a href="#处理其他进程发送过来的任务" class="headerlink" title="处理其他进程发送过来的任务"></a>处理其他进程发送过来的任务</h2><p>通过消息队列，我们实现了线程之间的消息通讯。在 Chrome 中，跨进程之间的任务也是频繁发生的，那么进程之间是如何通讯的呢？</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/img5.png" srcset="/img/loading.gif" class="">
+
+<p>跨进程发送消息</p>
+<p><strong>渲染进程里有个专门的 IO 线程用来接收其他进程传进来的消息</strong>。接收到消息后，它会将这些消息组装成任务发送给渲染主进程。后面的步骤就是我们刚才将的那些。</p>
+<h2 id="消息队列中的任务类型"><a href="#消息队列中的任务类型" class="headerlink" title="消息队列中的任务类型"></a>消息队列中的任务类型</h2><p>那么消息队列中的任务是有很多中类型的，比如：输入事件（鼠标滚动、点击、移动）、微任务、文件读写、WebSocket、JS定时器等。具体的类型可以参考chromium源码</p>
+<p><a target="_blank" rel="noopener" href="https://cs.chromium.org/chromium/src/third_party/blink/public/platform/task_type.h"></a></p>
+<p>除此之外，消息队列还包含了很多与页面相关的事件，比如：JS的执行、解析DOM、样式计算、布局计算、CSS动画等。</p>
+<p>以上这些事件都是在主线程里去执行的。</p>
+<h2 id="如何安全退出队列循环？"><a href="#如何安全退出队列循环？" class="headerlink" title="如何安全退出队列循环？"></a>如何安全退出队列循环？</h2><p>这里还有一个场景需要处理，当页面被关掉的时候，怎么才能退出这个循环呢？Chrome 是这样解决的，确定要退出当前页面时，页面主线程会设置一个变量，在每次执行完一个任务的时候，就去判断这个变量是不是需要退出。那么具体的代码如下：</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">const</span> taskQueue = [];
+<span class="hljs-keyword">let</span> keep_running = <span class="hljs-literal">true</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MainThread</span>(<span class="hljs-params"></span>)</span>&#123;
+  <span class="hljs-keyword">for</span>(;;)&#123;
+    <span class="hljs-keyword">const</span> task = taskQueue.shift();
+        <span class="hljs-keyword">if</span> (task) &#123;
+                ProcessTask(task);
+        &#125;
+        <span class="hljs-keyword">if</span>(!keep_running) <span class="hljs-comment">//如果设置了退出标志，那么直接退出线程循环</span>
+        <span class="hljs-keyword">break</span>;
+  &#125;
+&#125;</code></pre>
+
+<h2 id="消息队列的问题"><a href="#消息队列的问题" class="headerlink" title="消息队列的问题"></a>消息队列的问题</h2><p>上面整个的过程就是页面线程的循环系统的工作流程。这个时候你应该清楚了，页面所有执行的任务都来消息队列。消息队列是“先进先出”的属性，但是呢，“先进先出”有两个问题需要解决。</p>
+<ol>
+<li><p><strong>第一个问题是如何处理高优先级的任务</strong></p>
+<p> 比如一个典型的场景就是监控DOM节点的变化情况（节点的插入、修改、删除等动态变化），然后根据这些变化来处理相应的业务逻辑。一个通用的设计是，用JS设计一套监听接口，当发生变化时，渲染引擎同步调用这些接口，这个是个典型的观察者模式。</p>
+<p> 但是当 DOM 的变化非常频繁的时候，当前的任务执行时间会被拉长，它的执行效率会下降。那么如果将这些DOM的变化做成异步的事件，那么又会影响到监听的实时性。那么怎么去<strong>平衡效率和实时性</strong>呢？</p>
+<p> 这个时候，就出现了微任务。下面我们来看看微任务是如何权衡效率和实时性的。</p>
+<p> 通常我们把消息队列中的任务称为<strong>宏任务</strong>，每个宏任务中都包含了一个<strong>微任务队列</strong>，在执行宏任务的过程中，如果DOM有变化，那么就会将该变化添加到微任务列表中，这样将不会影响到宏任务的继续执行，因此也就解决了执行效率的问题。</p>
+<p> 等宏任务中的任务都执行完成了之后，渲染引擎并不着急去执行下一个宏任务，而是先执行当前宏任务中的微任务，因为DOM变化的事件都保存在这些微任务队列中，这样也解决了实时性问题。</p>
+</li>
+<li><p><strong>第二个问题是如何解决单个任务执行时间多久的问题</strong></p>
+<p> 因为所有的任务都是在单线程中执行的，所以每次只能执行一个任务，而其他任务就都处于等待状态。如果其中一个任务执行时间过久，那么下一个任务就要等待很长时间。这样就会引起卡顿的感觉。</p>
+ <img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/img6.png" srcset="/img/loading.gif" class="">
+
+<p> 单个任务执行时间过久</p>
+</li>
+</ol>
+<p>关于宏任务和微任务，我在后面会有详细的文章进行分析。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0setTimeout%E7%9A%84%EF%BC%9F/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浏览器怎么实现setTimeout的？</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/">
+                        <span class="hidden-mobile">浏览器渲染流程</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "浏览器中的消息队列和事件循环&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

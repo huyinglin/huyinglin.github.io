@@ -1,0 +1,670 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="huyinglin">
+  <meta name="keywords" content="">
+  <title>浏览器渲染流程 - Faz Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Faz Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/owl.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-16 15:37" pubdate>
+      2020年8月16日 下午
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      5.6k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      59
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">浏览器渲染流程</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>上一篇文章介绍了浏览器导航相关的流程，不过导航流程结束后，页面是白屏。因为此时渲染流程还没开始，页面内容还没有被渲染出来。这篇文章我们来仔细了解一下渲染流程。</p>
+<p>渲染阶段非常重要，也是浏览器里最核心和最复杂的模块之一。了解其相关流程能让你“看透”页面是如何工作的，有了这些知识，你可以解决一系列相关的问题，比如能熟练使用开发者工具，因为能够理解开发者工具里面大部分项目的含义，能优化页面卡顿问题，使用 JavaScript 优化动画流程，通过优化样式表来防止强制同步布局等等。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img.png" srcset="/img/loading.gif" class="">
+
+<p>由于渲染机制过于复杂，所以渲染模块在执行过程中会被划分为很多子阶段，输入的 HTML 经过这些子阶段，最后输出像素。我们把这样的一个处理流程叫做渲染流水线，其大致流程如下图所示：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img1.png" srcset="/img/loading.gif" class="">
+
+<p>这里的子阶段的概念相当于一个函数：</p>
+<ul>
+<li>开始每个子阶段都有其输入的内容。</li>
+<li>然后每个子阶段有其处理过程。</li>
+<li>最终每个子阶段会生成输出内容。</li>
+</ul>
+<p>渲染流程有下面几个子阶段：</p>
+<ol>
+<li>构建 DOM 树</li>
+<li>样式计算</li>
+<li>布局阶段</li>
+<li>分层</li>
+<li>绘制</li>
+<li>分块</li>
+<li>光栅化和合成</li>
+</ol>
+<p>内容比较多，下面我就来详细讲解各个子阶段。</p>
+<h2 id="构建-DOM-树"><a href="#构建-DOM-树" class="headerlink" title="构建 DOM 树"></a>构建 DOM 树</h2><p>第一步是构建 DOM 树。关于 DOM 树构建的原理，我在这篇文章中已经有详细的介绍。这里不做详细分析。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img2.png" srcset="/img/loading.gif" class="">
+
+<p>从图中可以看出，构建 DOM 树的输入内容是一个 HTML 文件，然后经由 HTML 解析器解析，最终输出树状结构的 DOM。</p>
+<p>现在已经生成 DOM 树了，不过 DOM 节点的样式我们依然不知道，下一步就是获取样式。</p>
+<h2 id="样式计算（Recalculate-Style）"><a href="#样式计算（Recalculate-Style）" class="headerlink" title="样式计算（Recalculate Style）"></a>样式计算（Recalculate Style）</h2><p>样式计算的目的是为了计算出 DOM 节点中每个元素的具体样式。</p>
+<p>CSS 规则的来源一共三种：CSS 文件外联、 Style 标签、行内样式。外联的 CSS 文件是当下载完成后就开始解析，并解析成 styleSheets。我们可以在浏览器中看到它的结构，在控制台输入document.styleSheets：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img3.png" srcset="/img/loading.gif" class="">
+
+
+<p>Style 标签和行内样式是在 DOM 解析的时候收集的。最后将上面收集的三种 CSS 规则，另外加上浏览器内置的默认规则（user agent stylesheet ），一共四种，根据继承和叠加规则计算每个 DOM 节点的样式，并被保存在 ComputedStyle 的结构内。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img4.png" srcset="/img/loading.gif" class="">
+
+
+<p>关于 CSS 的解析和计算，我在这篇问题中有更详细的介绍。</p>
+<p>这里还有个非常重要的关键点：<strong>什么时候开始计算 CSS 规则？</strong></p>
+<p>是 DOM 解析完之后吗？还是 CSS 文件解析完之后？这里的关键点是什么时候可以收集完所有的 CSS 规则。</p>
+<p>如果按照标准的 HTML 结构写法，Link CSS 和 Style 标签写在 Head 标签内。那么在解析完一个 DOM 节点的开始标签时（行内样式都是写在开始标签里的），上述的四种来源的规则就都收集完了。所以在正常情况下，HTML 解析器解析完一个 DOM 节点后就开始计算 CSS 规则了。</p>
+<p>如果不是标准写法会怎么处理呢？比如 Style 标签写在 Body 里面，那么在解析到 Body 里的 Style 标签后会重新计算 CSS 规则。所以非标准的 HTML 结构可能会降低性能。</p>
+<p>注意，这里计算的是当前 DOM 节点的规则。当解析完当前 DOM 节点时，它的父节点已经解析完了，样式也计算好了。而此时就已经满足选择器和权重等规则的解析了。现在 CSS 的选择器里都是父元素选下面的子元素，无法让子元素选择父元素。所以当一个元素的父元素都解析完成后，当前元素的 CSS 规则就可以计算出来。</p>
+<p>如果出现了子元素选择父元素的选择器，就必须重写这里的解析规则。而 CSS4 中包含了子元素选择父元素的选择器，这也是为何 CSS4 出来这么久，各大浏览器还没有适配的原因之一。</p>
+<p>另外，如果外联的 CSS 文件下载超时了，原则上会阻塞 CSS 的计算。但是浏览器有一些容错机制，下载超时后，均采用 user agent stylesheet 默认样式进行渲染，虽然丑点，但是最起码页面可以展示出来。</p>
+<h2 id="布局阶段"><a href="#布局阶段" class="headerlink" title="布局阶段"></a>布局阶段</h2><p>现在已经有 DOM 树和 DOM 树中元素的样式，但这还不足以显示页面，因为我们还不知道 DOM 元素的几何位置信息。<strong>那么接下来就需要计算出 DOM 树中可见元素的几何位置，我们把这个计算过程叫做布局。</strong></p>
+<p>Chrome 在布局阶段需要完成两个任务：创建布局树和布局计算。</p>
+<ol>
+<li><p><strong>创建布局树（LayoutTree）</strong></p>
+<p> 你可能注意到了 DOM 树还含有很多不可见的元素，比如 head 标签，还有使用了 display:none 属性的元素。所以在显示之前，我们还要额外地构建一棵只包含可见元素布局树。你们可能听说过渲染树，和这里的布局树是一个意思。具体的做法就是遍历DOM树，将可见元素添加到布局树中。同时合并样式。图里你可以看到，最后生成的布局树没有包含不可见的节点。</p>
+ <img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img5.png" srcset="/img/loading.gif" class="">
+
+<p> 布局树构造过程示意图</p>
+</li>
+<li><p><strong>布局计算</strong></p>
+</li>
+</ol>
+<p>现在我们有了一棵完整的布局树。那么接下来，就要计算布局树节点的坐标位置了。布局的计算过程非常复杂。</p>
+<p>CSS 的布局发展到现在，一共有三种：正常流布局、Flex 布局、Grid 布局。正常流布局虽然名字叫“正常”，但是它却是这三种布局里最不正常的，正常流布局的”三大难题“可是绞尽了那个时代前端工程师的脑汁。 Flex 布局是现在最主流的布局，可以比较轻松的处理正常流布局中很难实现的功能，另外移动端中也主要用 Flex 布局。Grid 布局功能很强大，但是学习成本偏高，兼容性也不太好，但在未来可能有成为主流的可能。</p>
+<p>在 CSS 中，我们一定听说过一个概念叫 “盒模型” ，一个“盒（box）”就是通过一个 DOM 节点的 width、height、margin、padding、border 等 CSS 规则计算出来的。另外，如果这个节点元素带有伪元素，其伪元素也会产生“盒”。“盒”的类型有很多种，比如：line-box、block-box、linline-box 等。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img6.png" srcset="/img/loading.gif" class="">
+
+<p>在 Blink（Chrome 的渲染引擎）的源码注释里面，很形象地画出了盒模型图（连滚动条都画出来了）。有了这一个个盒，浏览器就需要将这些盒像活字印刷术那样，按照规则排列起来，也叫”排版“。</p>
+<p>具体怎么排就要根据 CSS 规则规定的行为去计算。最终需要精确的计算每个元素的确切位置和尺寸，这里所有的相对测量值都会转为屏幕上的绝对像素。</p>
+<h2 id="分层"><a href="#分层" class="headerlink" title="分层"></a>分层</h2><p>现在我们有了布局树，而且每个元素的具体位置信息都计算出来了，那么接下来是不是就要开始着手绘制页面了？还差一点。</p>
+<p>因为页面中有很多复杂的效果，如一些复杂的 3D 变换、页面滚动，或者使用 z-index 做 z 轴排序等，为了更加方便地实现这些效果，<strong>渲染引擎还需要为特定的节点生成专用的图层，并生成一棵对应的图层树（LayerTree）</strong>。这个图层和PS里的图层差不多，那么最终的图像就是这些图层叠加在一起构成的。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img7.png" srcset="/img/loading.gif" class="">
+
+<p>布局树和图层树关系示意图</p>
+<p>通常情况下，<strong>并不是布局树的每个节点都包含一个图层，如果一个节点没有对应的层，那么这个节点就从属于父节点的图层。</strong>如上图中的 span 标签没有专属图层，那么它们就从属于它们的父节点图层。但不管怎样，最终每一个节点都会直接或者间接地从属于一个层。</p>
+<p>那么需要满足什么条件，渲染引擎才会为特定的节点创建新的图层呢？通常满足下面两点中任意一点的元素就可以被提升为单独的一个图层。</p>
+<ol>
+<li><p><strong>拥有层叠上下文属性</strong></p>
+<p> 我们知道有一个css属性叫 z-index。z-index 就是从图层外面到里面有一个z轴，它的值会影响这些层的渲染顺序。</p>
+<p> 那么文档中的层叠上下文由满足以下任意一个条件的元素形成：</p>
+<ul>
+<li><p>文档根元素（<code>&lt;html&gt;</code>）；</p>
+</li>
+<li><p><code>[position]</code> 值为 <code>absolute</code>（绝对定位）或 <code>relative</code>（相对定位）且 <code>[z-index]</code> 值不为 <code>auto</code> 的元素；</p>
+</li>
+<li><p><code>[position]</code> 值为 <code>fixed</code>（固定定位）或 <code>sticky</code>（粘滞定位）的元素（沾滞定位适配所有移动设备上的浏览器，但老的桌面浏览器不支持）；</p>
+</li>
+<li><p>flex (<code>flexbox</code>) 容器的子元素，且 <code>[z-index]</code> 值不为 <code>auto</code>；</p>
+</li>
+<li><p>grid (<code>[grid]</code>) 容器的子元素，且 <code>[z-index]</code> 值不为 <code>auto</code>；</p>
+</li>
+<li><p><code>[opacity]</code> 属性值小于 <code>1</code> 的元素；</p>
+</li>
+<li><p><code>[mix-blend-mode]</code> 属性值不为 <code>normal</code> 的元素；【元素的内容应该与元素的直系父元素的内容和元素的背景如何混合】</p>
+</li>
+<li><p>以下任意属性值不为 <code>none</code> 的元素：</p>
+<ul>
+<li><code>[transform]</code></li>
+<li><code>[filter]</code></li>
+<li><code>[perspective]</code>【使具有三维位置变换的元素产生透视效果】</li>
+<li><code>[clip-path]</code>【创建一个剪切区域】</li>
+<li><code>[mask]</code> / <code>[mask-image]</code> / <code>[mask-border]</code></li>
+</ul>
+</li>
+<li><p><code>[isolation]</code> 属性值为 <code>isolate</code> 的元素；【是否必须创建一个新的层叠上下文】</p>
+</li>
+<li><p><code>[will-change]</code> 值设定了任一属性而该属性在 non-initial 值时会创建层叠上下文的元素；</p>
+</li>
+<li><p><code>[-webkit-overflow-scrolling]</code> 属性值为 <code>touch</code> 的元素；【在移动端是否使用滚动回弹效果，但是基本没有浏览器支持这个属性】</p>
+</li>
+<li><p><code>[contain]</code> 属性值为 <code>layout</code>、<code>paint</code> 或包含它们其中之一的合成值（比如 <code>contain: strict</code>、<code>contain: content</code>）的元素。</p>
+<p>在层叠上下文中，子元素同样也按照上面解释的规则进行层叠。</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img8.png" srcset="/img/loading.gif" class="">
+
+<p>上图的结构如下：</p>
+</li>
+<li><p>Root</p>
+<ul>
+<li>DIV #1</li>
+<li>DIV #2</li>
+<li>DIV #3<ul>
+<li>DIV #4</li>
+<li>DIV #5</li>
+<li>DIV #6</li>
+</ul>
+</li>
+</ul>
+<p>这里需要注意，DIV #1 的 z-index 值最大，是5，所以它的层级在最上面。DIV #2最小，在最下面。</p>
+<p>DIV #4，DIV #5 和 DIV #6 是 DIV #3 的子元素，所以它们的层叠完全在 DIV #3 中被处理。也就是说DIV #3 和它的所有子元素是在同一个层级上的，子元素的z-index是没有意义的。他们整体的z-index是4，所以要放在 DIV #1 的下面。</p>
+</li>
+</ul>
+<p> <strong>其子级层叠上下文的 z-index 值只在父级中才有意义</strong>。<strong>子级层叠上下文被自动视为父级层叠上下文的一个独立单元。</strong></p>
+</li>
+<li><p><strong>需要剪裁（clip）的地方也会被创建为图层。</strong></p>
+<p> 裁剪是什么意思呢？简单来说就是内容溢出。</p>
+ <pre><code class="hljs jsx">&lt;style&gt;
+   div &#123;
+         width: <span class="hljs-number">200</span>;
+         height: <span class="hljs-number">200</span>;
+         overflow:auto;
+         **background: gray;**
+     &#125;
+&lt;/style&gt;
+&lt;body&gt;
+ &lt;div &gt;
+     &lt;p&gt;所以元素有了层叠上下文的属性或者需要被剪裁，那么就会被提升成为单独一层，你可以参看下图：&lt;/p&gt;
+     &lt;p&gt;从上图我们可以看到，<span class="hljs-built_in">document</span>层上有A和B层，而B层之上又有两个图层。这些图层组织在一起也是一颗树状结构。&lt;/p&gt;
+     &lt;p&gt;图层树是基于布局树来创建的，为了找出哪些元素需要在哪些层中，渲染引擎会遍历布局树来创建层树（Update LayerTree）。&lt;/p&gt;
+ &lt;/div&gt;
+&lt;/body&gt;</code></pre>
+
+<p> 出现这种裁剪情况的时候，渲染引擎会为文字部分单独创建一个层，如果出现滚动条，滚动条也会被提升为单独的层。</p>
+ <img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img9.png" srcset="/img/loading.gif" class="">
+
+<p> 被裁剪的内容会出现在单独一层</p>
+</li>
+</ol>
+<p>所以说，元素有了层叠上下文的属性或者需要被剪裁，满足其中任意一点，就会被提升成为单独一层。</p>
+<p>我们再通过一个例子来看看渲染引擎的分层机制。</p>
+<p>首先要问一个问题，屏幕是怎么显示图像的？我们人眼看到的，就是一张图片，准确来说，它是一张位图。它为什么能动呢？是因为这个图片再不断的被刷新。一般的屏幕会每秒更新60张图片，也就是我们常说的60HZ。HZ就是帧率的单位。每秒60张，也就是16.6毫秒左右一张图片，这个对于性能的要求是很高的，如果不做什么优化的话，用户就很容易感到卡顿。要解决卡顿的问题，就要解决每帧生成时间过久的问题。为了解决这个问题，Chrome 对渲染方式做了大量的工作，其中有效的策略就是引入了分层和合成机制。</p>
+<p>Chrome 的分层和合成是当今最先进的渲染技术。Chrome 中的合成技术，可以用三个词来概括总结：分层、分块和合成。</p>
+<p>通常一个页面的组成是非常复杂的，有的页面里要实现一些复杂的动画效果，比如点击、选中，还有一些炫酷的3D动画效果。我们刚才讲了我们看到的就是一张图片，如果我点了一个按钮，然后有个动画效果，就把整张图片重新生成，那这显然渲染效率就太低了，会导致卡顿。</p>
+<p>那分层是什么呢？你可以把一个网页想象成是由多个图片叠加在一起的，每个图片就对应一个图层，Chrome 合成器最终会将这些图层合成一张图片，然后显示出来。大家应该用过ps吧，ps里的图层。就和我说的这个图层比较像。每个图层可以设置透明度、阴影、渐变等，也可以旋转或者设置图层的上下位置。在这个过程中，将素材分解为多个图层的操作就称为分层，最后将这些图层合并到一起的操作就称为合成。所以，分层和合成通常是一起使用的。</p>
+<p>当进行到下一帧的渲染时，上面的一帧可能需要实现某些变换，如平移、旋转、缩放、阴影或者 Alpha 渐变，这时候合成器只需要将两个层进行相应的变化操作就可以了，显卡处理这些操作驾轻就熟，所以这个合成过程时间非常短。</p>
+<h2 id="图层绘制"><a href="#图层绘制" class="headerlink" title="图层绘制"></a>图层绘制</h2><p>在完成图层树的构建之后，渲染引擎会对图层树中的每个图层进行绘制，那么接下来我们看看渲染引擎是怎么实现图层绘制的？</p>
+<p>比如说，让你画这样一张图。它的背景是蓝色，然后在中间位置画一个红色的圆，最后再在圆上画个绿色三角形。你会怎么操作呢？</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img10.png" srcset="/img/loading.gif" class="">
+
+<p>通常，你会把你的绘制操作分解为三步：</p>
+<ol>
+<li>绘制蓝色背景；</li>
+<li>在中间绘制一个红色的圆；</li>
+<li>再在圆上绘制绿色三角形；</li>
+</ol>
+<p>渲染引擎实现图层的绘制与之类似，会把一个图层的绘制拆分成很多小的绘制指令，然后再把这些指令按照顺序组成一个待绘制列表，如下图所示：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img11.png" srcset="/img/loading.gif" class="">
+
+<p>绘制列表</p>
+<p>从图中可以看出，绘制列表中的指令其实非常简单，就是让其执行一个简单的绘制操作，比如绘制粉色矩形或者黑色的线等。而绘制一个元素通常需要好几条绘制指令，因为每个元素的背景、前景、边框都需要单独的指令去绘制。所以在图层绘制阶段，输出的内容就是这些待绘制列表。</p>
+<p>你也可以打开“开发者工具”的“Layers”标签，选择“document”层，来实际体验下绘制列表，如下图所示：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img12.png" srcset="/img/loading.gif" class="">
+
+<p>一个图层的绘制列表</p>
+<p>在该图中，区域 1 就是 document 的绘制列表，拖动区域 2 中的进度条可以重现列表的绘制过程。</p>
+<p>在绘制图层的时候， 即使只绘制那些优先级最高的图块，也要耗费不少的时间，因为涉及到一个很关键的因素——纹理上传，这是因为从计算机内存上传到 GPU 内存的操作会比较慢。为了解决这个问题，Chrome 又采取了一个策略：在首次合成图块的时候使用一个低分辨率的图片。比如可以是正常分辨率的一半，分辨率减少一半，纹理就减少了四分之三。在首次显示页面内容的时候，将这个低分辨率的图片显示出来，然后合成器继续绘制正常比例的网页内容，当正常比例的网页内容绘制完成后，再替换掉当前显示的低分辨率内容。这种方式尽管会让用户在开始时看到的是低分辨率的内容，但是也比用户在开始时什么都看不到要好。</p>
+<h2 id="栅格化（raster）操作"><a href="#栅格化（raster）操作" class="headerlink" title="栅格化（raster）操作"></a>栅格化（raster）操作</h2><p>绘制列表只是用来记录绘制顺序和绘制指令的列表，而实际上绘制操作是由渲染引擎中的合成线程来完成的。你可以结合下图来看下渲染主线程和合成线程之间的关系：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img13.png" srcset="/img/loading.gif" class="">
+
+<p>渲染进程中的合成线程和主线程</p>
+<p>如上图所示，当图层的绘制列表准备好之后，主线程会把该绘制列表<strong>提交（commit）</strong>给合成线程，那么接下来合成线程是怎么工作的呢？</p>
+<p>那我们得先来看看什么是视口，通常一个页面可能很大，但是用户只能看到其中的一部分，我们把用户可以看到的这个部分叫做<strong>视口（viewport）</strong>。</p>
+<p>在有些情况下，有的图层可以很大，比如有的页面你使用滚动条要滚动好久才能滚动到底部，但是通过视口，用户只能看到页面的很小一部分，所以在这种情况下，要绘制出所有图层内容的话，就会产生太大的开销，而且也没有必要。</p>
+<p>基于这个原因，<strong>合成线程会将图层划分为图块（tile）</strong>，这些图块的大小通常是 256x256 或者 512x512，如下图所示：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img14.png" srcset="/img/loading.gif" class="">
+
+<p>然后合成线程会按照视口附近的图块来优先生成位图，<strong>实际生成位图的操作是由栅格化来执行的。所谓栅格化，是指将图块转换为位图。而图块是栅格化执行的最小单位。</strong>渲染进程维护了一个栅格化的线程池，所有的图块栅格化都是在线程池内执行的，运行方式如下图所示：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img15.png" srcset="/img/loading.gif" class="">
+
+<p>合成线程提交图块给栅格化线程池</p>
+<p>通常，栅格化过程都会使用 GPU 来加速生成，使用 GPU 生成位图的过程叫快速栅格化，或者 GPU 栅格化，生成的位图被保存在 GPU 内存中。</p>
+<p>那么GPU 操作是运行在 GPU 进程中，如果栅格化操作使用了 GPU，那么最终生成位图的操作是在 GPU 中完成的，这就涉及到了跨进程操作。具体形式你可以参考下图：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img16.png" srcset="/img/loading.gif" class="">
+
+<p>GPU 栅格化</p>
+<p>从图中可以看出，渲染进程把生成图块的指令发送给 GPU，然后在 GPU 中执行生成图块的位图，并保存在 GPU 的内存中。</p>
+<h2 id="合成和显示"><a href="#合成和显示" class="headerlink" title="合成和显示"></a>合成和显示</h2><p>一旦所有图块都被光栅化，合成线程就会生成一个绘制图块的命令——“DrawQuad”，然后将该命令提交给浏览器进程。</p>
+<p>浏览器进程里面有一个叫 viz 的组件，用来接收合成线程发过来的 DrawQuad 命令，然后根据 DrawQuad 命令，将其页面内容绘制到内存中，最后再将内存显示在屏幕上。</p>
+<p>需要重点关注的是，合成操作是在合成线程上完成的，这也就意味着在执行合成操作时，是不会影响到主线程执行的。这就是为什么经常主线程卡住了，但是 CSS 动画依然能执行的原因。</p>
+<p>到这里，经过这一系列的阶段，编写好的 HTML、CSS、JavaScript 等文件，经过浏览器就会显示出漂亮的页面了。</p>
+<hr>
+<h2 id="渲染流程总结"><a href="#渲染流程总结" class="headerlink" title="渲染流程总结"></a>渲染流程总结</h2><p>我们现在已经分析完了整个渲染流程，从 HTML 到 DOM、样式计算、布局、图层、绘制、光栅化、合成和显示。下面我用一张图来总结下这整个渲染流程：</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B/img17.png" srcset="/img/loading.gif" class="">
+
+<p>完整的渲染流水线示意图</p>
+<p>结合上图，一个完整的渲染流程大致可总结为如下：</p>
+<ol>
+<li>渲染进程将 HTML 内容转换为能够读懂的 <strong>DOM 树</strong>结构。</li>
+<li>渲染引擎将 CSS 样式表转化为浏览器可以理解的 <strong>styleSheets</strong>，计算出 DOM 节点的样式。</li>
+<li>创建<strong>布局树</strong>，并计算元素的布局信息。</li>
+<li>对布局树进行分层，并生成<strong>分层树</strong>。</li>
+<li>为每个图层生成<strong>绘制列表</strong>，并将其提交到合成线程。</li>
+<li>合成线程将图层分成<strong>图块</strong>，并在<strong>光栅化线程池</strong>中将图块转换成位图。</li>
+<li>合成线程发送绘制图块命令 <strong>DrawQuad</strong> 给浏览器进程。</li>
+<li>浏览器进程根据 DrawQuad 消息<strong>生成页面</strong>，并显示到显示器上。</li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浏览器中的消息队列和事件循环</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AF%BC%E8%88%AA%E6%B5%81%E7%A8%8B/">
+                        <span class="hidden-mobile">浏览器导航流程</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "浏览器渲染流程&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="huyinglin">
+  <meta name="keywords" content="">
+  <title>浏览器怎么实现setTimeout的？ - Faz Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Faz Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/owl.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-16 15:58" pubdate>
+      2020年8月16日 下午
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      24
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">浏览器怎么实现setTimeout的？</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>定时器的概念非常简单，<strong>用来指定某个函数在多少毫秒之后执行</strong>。它会返回一个整数，表示定时器的ID，同时你还可以通过这个ID来取消这个定时器。</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">showName</span>(<span class="hljs-params"></span>)</span>&#123;
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&quot;这是一个定时器&quot;</span>)
+&#125;
+<span class="hljs-keyword">const</span> timerID = <span class="hljs-built_in">setTimeout</span>(showName, <span class="hljs-number">2</span> * <span class="hljs-number">1000</span>);</code></pre>
+
+<p>定时器虽然概念简单，但是它里面的陷阱很多，比如：</p>
+<ul>
+<li>定时器是根据第二个参数准时执行的吗？</li>
+<li>定时器的嵌套调用，会有问题吗？</li>
+<li>定时器的第二个参数有最大值吗？</li>
+<li>定时器的第一个参数中 this 指向有什么不一样？</li>
+</ul>
+<p>要想解答这些问题，我们需要了解浏览器到底是如何实现 setTimeout 的。</p>
+<h2 id="浏览器怎么实现-setTimeout-？"><a href="#浏览器怎么实现-setTimeout-？" class="headerlink" title="浏览器怎么实现 setTimeout ？"></a>浏览器怎么实现 setTimeout ？</h2><img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0setTimeout%E7%9A%84%EF%BC%9F/img.png" srcset="/img/loading.gif" class="">
+
+<p>我们再来回顾我在上篇文章讲的事件循环系统。我们知道渲染进程中所有运行在主线程上的任务都需要先添加到消息队列，然后事件循环系统再按顺序执行消息队列中的任务。</p>
+<p>我们再来看几个典型的事件：</p>
+<ul>
+<li>当接收到HTML文档数据，渲染引擎就会将“解析DOM”事件添加到消息队列中</li>
+<li>当用户改变来Web页面的窗口大小，渲染引擎就会将“重新布局”的事件添加到消息队列中</li>
+<li>当触发了JS引擎的垃圾回收机制，渲染引擎会将“垃圾回收”任务添加到消息队列中</li>
+<li>同样，如果要执行一段异步JS代码，也要将执行任务添加到消息队列中</li>
+</ul>
+<p>上面列举的只是一小部分事件，这些事件被添加到消息队列之后，事件循环系统就会按照消息队列中到顺序来执行事件。</p>
+<p>所以说要执行一个异步任务，需要先将任务添加到消息队列之后。不过定时器有点特别，因为它需要保证回调函数在指定的时间间隔内被调用，但消息队列中的任务是按顺序执行的，这样时间是不可控的。所以要保证回调函数能在指定时间内执行，就不能将定时器的回调函数直接添加到消息队列中。</p>
+<p>那应该怎么设计才能让定时器的回调函数在规定的时间内被执行呢？Chrome是这样实现的，<strong>在Chrome中除了正常使用的消息队列之外，还有另外一个消息队列</strong>，这个队列中维护了需要延迟执行的任务列表，包括了定时器和 Chromium 内部一些需要延迟执行的任务。所以当通过JS创建一个定时器时，渲染进程会将该定时器的回调任务添加到延迟队列中。</p>
+<p>源码中延迟执行队列是这样的</p>
+<pre><code class="hljs jsx">DelayedIncomingQueue delayed_incoming_queue;</code></pre>
+
+<p>下面是一段示例代码</p>
+<pre><code class="hljs jsx">struct DelayTask&#123;
+  int64 id；
+  CallBackFunction cbf;
+  int start_time;
+  int delay_time;
+&#125;;
+DelayTask timerTask;
+timerTask.cbf = showName;
+timerTask.start_time = getCurrentTime(); <span class="hljs-comment">//获取当前时间</span>
+timerTask.delay_time = <span class="hljs-number">200</span>;<span class="hljs-comment">//设置延迟执行时间</span></code></pre>
+
+<p>当通过JS调用setTimeout设置回调函数的时候，渲染进程将会创建一个回调任务，任务里包含了回调函数名字、延迟的时间。这样创建好任务后，再将该任务添加到延迟执行队列中</p>
+<pre><code class="hljs jsx">delayed_incoming_queue.push(timerTask)；</code></pre>
+
+<p>现在通过定时器发起的任务已经保存在延迟队列中了，那怎么触发这个延迟队列呢？</p>
+<p>我们来看看前面提到的消息循环代码</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">ProcessDelayTask</span>(<span class="hljs-params"></span>)</span>&#123;
+  <span class="hljs-comment">//从delayed_incoming_queue中取出已经到期的定时器任务</span>
+  <span class="hljs-comment">//依次执行这些任务</span>
+&#125;
+
+<span class="hljs-keyword">const</span> task_queue = []；
+ProcessTask();
+<span class="hljs-keyword">let</span> keep_running = <span class="hljs-literal">true</span>;
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">MainTherad</span>(<span class="hljs-params"></span>)</span>&#123;
+  <span class="hljs-keyword">for</span>(;;)&#123;
+    <span class="hljs-comment">//执行消息队列中的任务</span>
+    <span class="hljs-keyword">const</span> task = task_queue.shift();
+        <span class="hljs-keyword">if</span> (task)
+        ProcessTask(task);
+
+    <span class="hljs-comment">//执行延迟队列中的任务</span>
+    ProcessDelayTask()
+
+    <span class="hljs-keyword">if</span>(!keep_running) <span class="hljs-comment">//如果设置了退出标志，那么直接退出线程循环</span>
+        <span class="hljs-keyword">break</span>;
+  &#125;
+&#125;</code></pre>
+
+<p>代码里可以看出，我们添加了一个 <strong>ProcessDelayTask 函数</strong>，这个函数是专门来处理延迟执行任务的。在一个循环过程中，当消息队列中的任务被执行完之后，就开始执行ProcessDelayTask函数。ProcessDelayTask函数会根据发起时间和延迟时间计算出到期的任务，然后依次执行这些到期的任务。然后这些延迟任务执行完成之后，再继续下一个循环过程。</p>
+<p>还有一个操作就是，我们可以通过clearTimeout来取消一个定时器，它的实现也很简单。</p>
+<pre><code class="hljs jsx"><span class="hljs-built_in">clearTimeout</span>(timer_id)</code></pre>
+
+<p>当我们设置一个定时器的时候，JS引擎会返回一个定时器的ID。取消的时候直接从延迟队列中找到ID对应的任务，然后把它删掉就可以了。这样就实现了一个完成的定时器。</p>
+<h2 id="使用-setTimeout-的一些注意事项"><a href="#使用-setTimeout-的一些注意事项" class="headerlink" title="使用 setTimeout 的一些注意事项"></a>使用 setTimeout 的一些注意事项</h2><p>现在你应该知道在浏览器内部定时器是如何工作的了。不过在使用定时器的过程中，如果你不了解定时器的一些细节，那么很有可能掉进定时器的一些陷阱里。下面我们就来回答一下开始的那几个问题。</p>
+<ol>
+<li><p><strong>如果当前任务执行时间过久，会影响定时器任务的执行，导致时间不准</strong></p>
+<p> 其实通过上面的流程，我们可以看出来定时器的时间可能是不准的。如果消息队列里面的一个任务执行时间过长，就会导致定时器的任务会被延后执行。</p>
+</li>
+</ol>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0setTimeout%E7%9A%84%EF%BC%9F/img1.png" srcset="/img/loading.gif" class="">
+
+<p>长任务导致定时器被延后执行</p>
+<ol start="2">
+<li><strong>如果 setTimeout 存在嵌套调用，那么系统会设置最短时间间隔为 4 毫秒</strong></li>
+</ol>
+<p>还有就是如果 setTimeout 存在嵌套调用，那么系统会设置最短时间间隔为 4 毫秒。这也就是说定时器函数里面嵌套定时器，也会延长定时器的执行时间。</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cb</span>(<span class="hljs-params"></span>) </span>&#123; <span class="hljs-built_in">setTimeout</span>(cb, <span class="hljs-number">0</span>); &#125;
+<span class="hljs-built_in">setTimeout</span>(cb, <span class="hljs-number">0</span>);</code></pre>
+
+<p>我们来看一段代码，相应的执行过程如下</p>
+<img src="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0setTimeout%E7%9A%84%EF%BC%9F/img2.png" srcset="/img/loading.gif" class="">
+
+<p>循环嵌套调用 setTimeout</p>
+<p>图里的竖线就是定时器的函数回调过程，从图中可以看出，前面五次调用的时间间隔比较小，嵌套调用5次以上，后面每次调用最小时间间隔是4毫秒。这样做的原因是，定时器嵌套调用5次以上，会被chrome认为该方法被阻塞了，如果这个定时器的调用时间小于4毫秒，那么chrome会将每次调用的时间间隔设置为4毫秒。</p>
+<p>所以一些实时性较高的需要就不太适合用setTimeout了，比如你用setTimeout去实现一个JS动画就不是个好主意。至于替代方案，可以使用CSS3动画，虽然是强大的CSS3也有鞭长莫及的时候，比如像scrollTop值。所以这个时候还需要JS出马，使用window.requestAnimationFrame函数。</p>
+<p>这个函数名表意为“请求动画帧”。它是怎么执行的呢。它是根据设备的刷新率更新的。正常来讲屏幕的刷新率是60帧每秒，也就是说16.7毫秒会更新一帧，一帧就是一张图片。这个函数就是在浏览器每次重绘之前调用这个函数。所以它是不用设置具体的间隔时间的，而且这样执行效率很高，因为每次执行的时机都是固定的。当然raf的回调函数也是在主线程上执行的，如果回调函数执行时间过长，也会影响到其他任务。</p>
+<ol start="3">
+<li><strong>延时执行时间有最大值</strong></li>
+</ol>
+<p>还有一点就是定时器的执行时间是有最大值的。现在主流的浏览器都是以32个bit来存贮这个时间的。32bit只能存放2^31-1毫秒，也就是大约24.8天。如果设置的时间大于这个数，这个值就会溢出，那么就相当于把时间设置成0了，它就会马上执行。</p>
+<ol start="4">
+<li><strong>使用 setTimeout 设置的回调函数中的 this 不符合直觉</strong></li>
+</ol>
+<p>如果被 setTimeout 推迟执行的回调函数是某个对象的方法，那么该方法中的 this 关键字将指向全局环境，而不是定义时所在的那个对象。这点在前面介绍 this 的时候也提过，你可以看下面这段代码的执行结果：</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">var</span> name= <span class="hljs-number">1</span>;
+<span class="hljs-keyword">var</span> MyObj = &#123;
+  name: <span class="hljs-number">2</span>,
+  showName: <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span>&#123;
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-built_in">this</span>.name);
+  &#125;
+&#125;
+<span class="hljs-built_in">setTimeout</span>(MyObj.showName,<span class="hljs-number">1000</span>)</code></pre>
+
+<p>这里输出的是 1，因为这段代码在编译的时候，执行上下文中的 this 会被设置为全局 window，如果是严格模式，会被设置为 undefined。</p>
+<p>另外还有一种情况，就是当前页面可能不是激活页面，那么 Chrome 会将定时器的最小时间间隔设置为1秒，显然这样可以降低消耗。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JavaScript/">JavaScript</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E5%AE%8F%E4%BB%BB%E5%8A%A1%E5%92%8C%E5%BE%AE%E4%BB%BB%E5%8A%A1/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浏览器中的宏任务和微任务</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%AD%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8C%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/">
+                        <span class="hidden-mobile">浏览器中的消息队列和事件循环</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "浏览器怎么实现setTimeout的？&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

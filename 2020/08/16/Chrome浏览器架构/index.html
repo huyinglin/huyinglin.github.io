@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="huyinglin">
+  <meta name="keywords" content="">
+  <title>Chrome浏览器架构 - Faz Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Faz Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/owl.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-16 01:25" pubdate>
+      2020年8月16日 凌晨
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      24
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">Chrome浏览器架构</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>这篇文章，我们来讨论一下 Chrome 浏览器的架构。在讲架构之前，我们先来巩固一下两个概念：线程和进程。</p>
+<h2 id="进程和线程"><a href="#进程和线程" class="headerlink" title="进程和线程"></a>进程和线程</h2><p>先来看看进程。简单来讲一个进程就是一个程序的运行实例。具体来讲，就是启动一个程序的时候，操作系统会为该程序创建一块内存，用来存放代码、运行中的数据和一个执行任务的主线程，我们把这样的一个运行环境叫进程。</p>
+<p>一个进程里可以有多个线程。线程不能单独存在，它是依附于进程的，并由进程启动和管理。多个线程之间可以共享进程中的数据，它们可以对进程里的公共数据进行读写操作。同时，只要有一个线程崩溃，那么整个进程就会崩溃。</p>
+<p>当一个进程关闭后，操作系统会回收这个进程所申请的所有资源。</p>
+<p>线程和进程的关系如下图：</p>
+<img src="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/Untitled.png" srcset="/img/loading.gif" class="">
+
+<p>了解完进程和线程之后，我们先来看看，远古时期的浏览器架构是什么样的。</p>
+<h2 id="单进程浏览器"><a href="#单进程浏览器" class="headerlink" title="单进程浏览器"></a>单进程浏览器</h2><p>在大约十几年前，浏览器还是单进程的结构。比如 IE6，IE6是单标签的，就是一个页面一个窗口。它把所有功能模块都运行在同一个进程里，这些模块包含了网络、插件、JS引擎和渲染引擎等。</p>
+<p>这么多功能模块运行在一个进程里显然是不稳定的。这种架构下就会出现，一个浏览器中，其中一个页面或者插件卡死，整个浏览器都崩溃了。所以单进程浏览器会有这么几个明显的问题：不稳定、不流畅、不安全。</p>
+<img src="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/Untitled1.png" srcset="/img/loading.gif" class="">
+
+<h2 id="多进程浏览器"><a href="#多进程浏览器" class="headerlink" title="多进程浏览器"></a>多进程浏览器</h2><p>由于单进程浏览器存在诸多问题，之后就随之出现了多进程架构的浏览器。那么多进程架构是如何解决单进程架构问题的呢？</p>
+<h3 id="早期多进程架构"><a href="#早期多进程架构" class="headerlink" title="早期多进程架构"></a>早期多进程架构</h3><img src="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/Untitled2.png" srcset="/img/loading.gif" class="">
+
+<p>这个是早期 Chrome 的进程架构图。它主要包含这几个进程：浏览器主进程、渲染进程、插件进程。各个进程之间通过 IPC 机制通信。</p>
+<p>因为进程和进程之间是相互隔离的，所以当一个页面或插件崩溃的时候，影响到的仅仅是当前的页面进程或者插件进程，并不会影响到其他页面。这样就完美的解决了不稳定的问题。</p>
+<p>我们再来看看，卡顿的问题是如何解决的。首先在多进程浏览器中，每新打开一个页面都会为其新建一个渲染进程。同样，JS也是运行在渲染进程中的，所以即便是JS阻塞了渲染进程，它影响的也只是当前的页面，不会影响到其他页面。</p>
+<p>关于JS脚本导致的内存泄露问题。当关闭这个页面时，这个进程所占用的所有内存会被系统回收，所以根本不存在内存泄漏的问题。</p>
+<p>最后我们再来看看安全问题是怎么解决的。多进程浏览器的额外好处就是可以使用沙箱，你可以把沙箱看成是操作系统给进程上了一把锁，沙箱里面的程序可以运行，但是不能在你的硬盘上读写数据。我们可以从这个图中看出来， Chrome 把对外的插件进程和渲染进程锁在沙箱里，这样即使渲染进程或者插件进程里有恶意程序，也无法突破沙箱的限制去获取系统权限。</p>
+<h3 id="目前多进程架构"><a href="#目前多进程架构" class="headerlink" title="目前多进程架构"></a>目前多进程架构</h3><p>Chrome 的更新迭代非常迅速。相比之前，目前的架构又有了很多新的变化。那么我们来看看最新的Chrome 进程架构是什么样的。</p>
+<img src="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/Untitled3.png" srcset="/img/loading.gif" class="">
+
+<p>从图中可以看出，现在的 Chrome 架构中包括下面几个进程：</p>
+<ul>
+<li>1个浏览器主进程</li>
+<li>1个GPU进程</li>
+<li>1个网络进程</li>
+<li>多个渲染进程</li>
+<li>多个插件进程</li>
+</ul>
+<p>首先最重要的就是浏览器主进程。它主要负责界面展示、用户交互、子进程管理，同时提供存储等功能。</p>
+<p>渲染进程的核心任务是将 HTML、CSS 和 JS 转换为用户可以与之交互的网页。渲染引擎 Blink 和 V8 都是运行在该进程中。在默认情况下，chrome会为每个 Tab 页创建一个渲染进程，出于安全考虑，渲染进程都是运行在沙箱模式下的。</p>
+<p>GPU进程。开始 Chrome 是没有 GPU 进程的。而 GPU 的使用初衷是为了实现 3D CSS 的效果。后来网页、Chrome 的 UI 界面都选择采用 GPU 绘制，这样使 GPU 成为浏览器的一个普遍需求。最后，Chrome 在架构上引入了 GPU 进程。</p>
+<p>网络进程，主要负责页面的网络资源加载。以前它是作为一个模块运行在主进程里的，现在把它独立出来，成为一个单独的进程。</p>
+<p>插件进程主要是负责插件的运行，因为插件容易崩溃，所以用进程来隔离插件出现的问题是一个很好的方案。</p>
+<p>我们可以通过 Chrome 里的任务管理器来查看当前运行的进程。那么打开一个页面，至少需要 4个进程：1个浏览器进程、1个网络进程、1渲染进程、1个 GPU 进程，如果有插件的话，还有一些插件进程。</p>
+<img src="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/Untitled4.png" srcset="/img/loading.gif" class="">
+
+<p>上图中还有一个进程：V8 代理解析工具，它是干什么用的呢？Chrome 支持使用 JavaScript 来写连接代理服务器脚本，又称为在线 PAC 代理脚本，使用 PAC 代理脚本可以实现一些会被请去喝茶的事情。刚开始的时候，Chrome 是在浏览器进程里面解析 PAC 代理脚本的，由于是 JavaScript脚 本，所有需要在浏览器进程里面引入 V8，不过把 V8 运行在浏览器进程似乎不太好，于是 Chrome 团队后来就把这个功能独立出来一个进程了，这个进程就叫“Utility: V8 Proxy Resolver”。</p>
+<p>不过凡事都有两面性，虽然多进程模型提升了浏览器的稳定性、流畅性和安全性，但同样不可避免地带来了一些问题：</p>
+<ul>
+<li><strong>更高的资源占用。</strong>因为每个进程都会包含公共基础结构的副本（如 JavaScript 运行环境），这就意味着浏览器会消耗更多的内存资源。</li>
+<li><strong>更复杂的体系架构。</strong>浏览器各模块之间耦合性高、扩展性差等问题，会导致现在的架构已经很难适应新的需求了。</li>
+</ul>
+<h3 id="未来面向服务的架构"><a href="#未来面向服务的架构" class="headerlink" title="未来面向服务的架构"></a>未来面向服务的架构</h3><p>对于这些问题，Chrome 团队一直在寻求一种弹性方案。在2016年，Chrome 团队使用了“<strong>面向服务的架构</strong>”（Services Oriented Architecture，简称 SOA）的思想设计了新的 Chrome 架构。</p>
+<p>也就是说 Chrome 最终要把 UI、数据库、文件、设备、网络等模块重构为基础服务，类似操作系统底层服务，下面是 Chrome“面向服务的架构”的进程模型图：Chrome 整体架构会朝向现在操作系统所采用的“面试服务的架构”方向发展，原来的各种模块会被重构成独立的服务（Service），每个服务（Service）都可以在独立的进程中运行。从而构建一个<strong>更内聚、松耦合、易于维护和扩展</strong>的系统，更好实现 Chrome 简单、稳定、高速、安全的目标。</p>
+<p>Chrome 最终要把 UI、数据库、文件、设备、网络等模块重构为基础服务，类似操作系统底层服务，下面是 Chrome“ 面向服务的架构”的进程模型图：</p>
+<img src="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/Untitled5.png" srcset="/img/loading.gif" class="">
+
+<p>目前 Chrome 正处在老的架构向服务化架构过渡阶段，这将是一个漫长的迭代过程。Chrome 正在逐步构建 Chrome 基础服务（Chrome Foundation Service），如果你认为 Chrome 是“便携式操作系统”，那么 Chrome 基础服务便可以被视为该操作系统的“基础”系统服务层。</p>
+<p>同时 Chrome 还提供灵活的弹性架构，在强大性能设备上会以多进程的方式运行基础服务，但是如果在资源受限的设备上（如下图），Chrome 会将很多服务整合到一个进程中，从而节省内存占用。</p>
+<img src="/2020/08/16/Chrome%E6%B5%8F%E8%A7%88%E5%99%A8%E6%9E%B6%E6%9E%84/Untitled6.png" srcset="/img/loading.gif" class="">
+
+<p>在资源不足的设备上，将服务合并到浏览器进程中</p>
+<p>总体说来，Chrome 是以一个非常快速的速度在进化，越来越多的业务和应用都逐渐转至浏览器来开发。我们期待 Chrome 将来可以承托更多的业务场景，比如移动设备、VR、视频等。鉴于目前架构的复杂性，要完整过渡到面向服务架构，估计还需要好几年时间才能完成。不过 Chrome 开发是一个渐进的过程，新的特性会一点点加入进来，这也意味着我们随时能看到 Chrome 新的变化。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/16/%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AF%BC%E8%88%AA%E6%B5%81%E7%A8%8B/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浏览器导航流程</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/16/CSS%E7%9A%84%E8%A7%A3%E6%9E%90%E5%92%8C%E8%AE%A1%E7%AE%97/">
+                        <span class="hidden-mobile">CSS的解析和计算</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Chrome浏览器架构&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
