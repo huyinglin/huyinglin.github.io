@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="huyinglin">
+  <meta name="keywords" content="">
+  <title>登录鉴权 - Faz Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Faz Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/owl.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-17 17:04" pubdate>
+      2020年8月17日 下午
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.6k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      29
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">登录鉴权</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>登录是每个网站中都经常用到的一个功能，在页面上我们输入账号密码，敲一下回车键，就登录了，但这背后的登录原理你是否清楚呢？今天我们就来介绍几种常用的登录方式。</p>
+<ul>
+<li>Cookie + Session 登录</li>
+<li>Token 登录</li>
+<li>SSO 单点登录</li>
+<li>OAuth 第三方登录</li>
+</ul>
+<h2 id="Cookie-Session-登录"><a href="#Cookie-Session-登录" class="headerlink" title="Cookie + Session 登录"></a>Cookie + Session 登录</h2><p>HTTP 是一种无状态的协议，客户端每次发送请求时，首先要和服务器端建立一个连接，在请求完成后又会断开这个连接。这种方式可以节省传输时占用的连接资源，但同时也存在一个问题：<strong>每次请求都是独立的</strong>，服务器端无法判断本次请求和上一次请求是否来自同一个用户，进而也就无法判断用户的登录状态。</p>
+<p>为了解决 HTTP 无状态的问题，Lou Montulli 在 1994 年的时候，推出了 Cookie。</p>
+<blockquote>
+<p>Cookie 是服务器端发送给客户端的一段特殊信息，这些信息以文本的方式存放在客户端，客户端每次向服务器端发送请求时都会带上这些特殊信息。</p>
+</blockquote>
+<p>有了 Cookie 之后，服务器端就能够获取到客户端传递过来的信息了，如果需要对信息进行验证，还需要通过 Session。</p>
+<blockquote>
+<p>客户端请求服务端，服务端会为这次请求开辟一块内存空间，这个便是 Session 对象。</p>
+</blockquote>
+<p>有了 Cookie 和 Session 之后，我们就可以进行登录认证了。</p>
+<h3 id="Cookie-Session-实现流程"><a href="#Cookie-Session-实现流程" class="headerlink" title="Cookie + Session 实现流程"></a>Cookie + Session 实现流程</h3><p>Cookie + Session 的登录方式是最经典的一种登录方式，现在仍然有大量的企业在使用。</p>
+<ol>
+<li>用户向服务器发送用户名和密码。</li>
+<li>服务器验证通过后，在当前对话（session）里面保存相关数据，比如用户角色、登录时间等等。</li>
+<li>服务器向用户返回一个 session_id，写入用户的 Cookie。</li>
+<li>用户随后的每一次请求，都会通过 Cookie，将 session_id 传回服务器。</li>
+<li>服务器收到 session_id，找到前期保存的数据，由此得知用户的身份。</li>
+</ol>
+<p>在第一次登录完后，后面的访问服务端就可以通过 Cookie 中的 session_id 来校验是否验证通过。</p>
+<h3 id="Cookie-Session-存在的问题"><a href="#Cookie-Session-存在的问题" class="headerlink" title="Cookie + Session 存在的问题"></a>Cookie + Session 存在的问题</h3><p>虽然我们使用 Cookie + Session 的方式完成了登录验证，但仍然存在一些问题：</p>
+<ul>
+<li>由于服务器端需要对接大量的客户端，也就需要存放大量的 session_id，这样会导致服务器压力过大。</li>
+<li>如果服务器端是一个集群，为了同步登录态，需要将 session_id 同步到每一台机器上，无形中增加了服务器端维护成本。</li>
+<li>由于 session_id 存放在 Cookie 中，所以无法避免 CSRF 攻击。</li>
+</ul>
+<h2 id="Token-登录"><a href="#Token-登录" class="headerlink" title="Token 登录"></a>Token 登录</h2><p>为了解决 Session + Cookie 机制暴露出的诸多问题，我们可以使用 Token 的登录方式。</p>
+<blockquote>
+<p>Token 是服务端生成的一串字符串，以作为客户端请求的一个令牌。当第一次登录后，服务器会生成一个 Token 并返回给客户端，客户端后续访问时，只需带上这个 Token 即可完成身份认证。</p>
+</blockquote>
+<h3 id="Token-机制实现流程"><a href="#Token-机制实现流程" class="headerlink" title="Token 机制实现流程"></a>Token 机制实现流程</h3><p>用户首次登录时：</p>
+<ol>
+<li>用户输入账号密码，并点击登录。</li>
+<li>服务器端验证账号密码无误，创建 Token。</li>
+<li>服务器端将 Token 返回给客户端，由<strong>客户端自由保存</strong>。</li>
+</ol>
+<p>后面的访问中带上第一次登录时获取的 Token，服务器就可以验证 Token 的有效性。</p>
+<h3 id="Token-机制的特点"><a href="#Token-机制的特点" class="headerlink" title="Token 机制的特点"></a>Token 机制的特点</h3><ul>
+<li>服务器端不需要存放 Token，所以不会对服务器端造成压力，即使是服务器集群，也不需要增加维护成本。</li>
+<li>Token 可以存放在前端任何地方，可以不用保存在 Cookie 中，提升了页面的安全性。</li>
+<li>Token 下发之后，只要在生效时间之内，就一直有效，如果服务器端想收回此 Token 的权限，并不容易。</li>
+</ul>
+<h3 id="Token-的生成方式"><a href="#Token-的生成方式" class="headerlink" title="Token 的生成方式"></a>Token 的生成方式</h3><p>最常见的 Token 生成方式是使用 JWT（Json Web Token），它是一种简洁的，自包含的方法用于通信双方之间以 JSON 对象的形式安全的传递信息。</p>
+<p>上文中我们说到，使用 Token 后，服务器端并不会存储 Token，那怎么判断客户端发过来的 Token 是合法有效的呢？</p>
+<p>答案其实就在 Token 字符串中，其实 Token 并不是一串杂乱无章的字符串，而是通过多种算法拼接组合而成的字符串，我们来具体分析一下。</p>
+<p>JWT 算法主要分为 3 个部分：header（头信息），playload（消息体），signature（签名）。</p>
+<p>header 部分指定了该 JWT 使用的签名算法:</p>
+<pre><code class="hljs jsx">header = <span class="hljs-string">&#x27;&#123;&quot;alg&quot;:&quot;HS256&quot;,&quot;typ&quot;:&quot;JWT&quot;&#125;&#x27;</span>   <span class="hljs-comment">// `HS256` 表示使用了 HMAC-SHA256 来生成签名。</span></code></pre>
+
+<p>playload 部分表明了 JWT 的意图：</p>
+<pre><code class="hljs jsx">payload = <span class="hljs-string">&#x27;&#123;&quot;loggedInAs&quot;:&quot;admin&quot;,&quot;iat&quot;:1422779638&#125;&#x27;</span>     <span class="hljs-comment">//iat 表示令牌生成的时间</span></code></pre>
+
+<p>signature 部分为 JWT 的签名，主要为了让 JWT 不能被随意篡改，签名的方法分为两个步骤：</p>
+<ol>
+<li>输入 <code>base64url</code> 编码的 header 部分、 <code>.</code> 、<code>base64url</code> 编码的 playload 部分，输出 unsignedToken。</li>
+<li>输入服务器端私钥、unsignedToken，输出 signature 签名。</li>
+</ol>
+<pre><code class="hljs jsx"><span class="hljs-keyword">const</span> base64Header = encodeBase64(header)
+<span class="hljs-keyword">const</span> base64Payload = encodeBase64(payload)
+<span class="hljs-keyword">const</span> unsignedToken = <span class="hljs-string">`<span class="hljs-subst">$&#123;base64Header&#125;</span>.<span class="hljs-subst">$&#123;base64Payload&#125;</span>`</span>
+<span class="hljs-keyword">const</span> key = <span class="hljs-string">&#x27;服务器私钥&#x27;</span>
+
+signature = HMAC(key, unsignedToken)</code></pre>
+
+<p>最后的 Token 计算如下：</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">const</span> base64Header = encodeBase64(header)
+<span class="hljs-keyword">const</span> base64Payload = encodeBase64(payload)
+<span class="hljs-keyword">const</span> base64Signature = encodeBase64(signature)
+
+token = <span class="hljs-string">`<span class="hljs-subst">$&#123;base64Header&#125;</span>.<span class="hljs-subst">$&#123;base64Payload&#125;</span>.<span class="hljs-subst">$&#123;base64Signature&#125;</span>`</span></code></pre>
+
+<p>服务器在判断 Token 时：</p>
+<pre><code class="hljs jsx"><span class="hljs-keyword">const</span> [base64Header, base64Payload, base64Signature] = token.split(<span class="hljs-string">&#x27;.&#x27;</span>)
+
+<span class="hljs-keyword">const</span> signature1 = decodeBase64(base64Signature)
+<span class="hljs-keyword">const</span> unsignedToken = <span class="hljs-string">`<span class="hljs-subst">$&#123;base64Header&#125;</span>.<span class="hljs-subst">$&#123;base64Payload&#125;</span>`</span>
+<span class="hljs-keyword">const</span> signature2 = HMAC(<span class="hljs-string">&#x27;服务器私钥&#x27;</span>, unsignedToken)
+
+<span class="hljs-keyword">if</span>(signature1 === signature2) &#123;
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;签名验证成功，token 没有被篡改&#x27;</span>
+&#125;
+
+<span class="hljs-keyword">const</span> payload =  decodeBase64(base64Payload)
+<span class="hljs-keyword">if</span>(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>() - payload.iat &lt; <span class="hljs-string">&#x27;token 有效期&#x27;</span>)&#123;
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;token 有效&#x27;</span>
+&#125;</code></pre>
+
+<p>有了 Token 之后，登录方式已经变得非常高效，接下来我们介绍另外两种登录方式。</p>
+<h2 id="SSO-机制实现流程"><a href="#SSO-机制实现流程" class="headerlink" title="SSO 机制实现流程"></a>SSO 机制实现流程</h2><p>用户首次访问时，需要在认证中心登录：</p>
+<ol>
+<li>用户访问网站 <code>a.com</code> 下的 pageA 页面。</li>
+<li>由于没有登录，则会重定向到认证中心，并带上回调地址 <code>www.sso.com?return_uri=a.com/pageA</code>，以便登录后直接进入对应页面。</li>
+<li>用户在认证中心输入账号密码，提交登录。</li>
+<li>认证中心验证账号密码有效，然后重定向 <code>a.com?ticket=123</code> 带上授权码 ticket，并将认证中心 <code>sso.com</code> 的登录态写入 Cookie。</li>
+<li>在 <code>a.com</code> 服务器中，拿着 ticket 向认证中心确认，授权码 ticket 真实有效。</li>
+<li>验证成功后，服务器将登录信息写入 Cookie（此时客户端有 2 个 Cookie 分别存有 <code>a.com</code> 和 <code>sso.com</code> 的登录态）。</li>
+</ol>
+<p>认证中心登录完成之后，继续访问 <a target="_blank" rel="noopener" href="http://a.com/">a.com</a> 下的其他页面时，由于 <a target="_blank" rel="noopener" href="http://a.com/">a.com</a> 存在已登录的 Cookie 信息，所以服务器端直接认证成功。</p>
+<p>如果认证中心登录完成之后，访问 <a target="_blank" rel="noopener" href="http://b.com/">b.com</a> 下的页面。这个时候，由于认证中心存在之前登录过的 Cookie，所以也不用再次输入账号密码，直接返回第 4 步，下发 ticket 给 <a target="_blank" rel="noopener" href="http://b.com/">b.com</a> 即可。</p>
+<h3 id="SSO-单点登录退出"><a href="#SSO-单点登录退出" class="headerlink" title="SSO 单点登录退出"></a>SSO 单点登录退出</h3><p>目前我们已经完成了单点登录，在同一套认证中心的管理下，多个产品可以共享登录态。现在我们需要考虑退出了，即：在一个产品中退出了登录，怎么让其他的产品也都退出登录？</p>
+<p>原理其实不难，可以回过头来看第 5 步，每一个产品在向认证中心验证 ticket 时，其实可以顺带将自己的退出登录 api 发送到认证中心。</p>
+<p>当某个产品 <a target="_blank" rel="noopener" href="http://c.com/">c.com</a> 退出登录时：</p>
+<ol>
+<li>清空 <code>c.com</code> 中的登录态 Cookie。</li>
+<li>请求认证中心 <code>sso.com</code> 中的退出 api。</li>
+<li>认证中心遍历下发过 ticket 的所有产品，并调用对应的退出 api，完成退出。</li>
+</ol>
+<h2 id="OAuth-第三方登录"><a href="#OAuth-第三方登录" class="headerlink" title="OAuth 第三方登录"></a>OAuth 第三方登录</h2><p>在上文中，我们使用单点登录完成了多产品的登录态共享，但都是建立在一套统一的认证中心下，对于一些小型企业，未免太麻烦，有没有一种登录能够做到开箱即用？</p>
+<p>其实是有的，很多大厂都会提供自己的第三方登录服务，比如微信登录、微博登录、QQ 登录等。我们一起来分析一下。</p>
+<h3 id="OAuth-机制实现流程"><a href="#OAuth-机制实现流程" class="headerlink" title="OAuth 机制实现流程"></a>OAuth 机制实现流程</h3><p>这里以微信开放平台的接入流程为例：</p>
+<ol>
+<li>首先，<code>a.com</code> 的运营者需要在微信开放平台注册账号，并向微信申请使用微信登录功能。</li>
+<li>申请成功后，得到申请的 appid、appsecret。</li>
+<li>用户在 <code>a.com</code> 上选择使用微信登录。</li>
+<li>这时会跳转微信的 OAuth 授权登录，并带上 <code>a.com</code> 的回调地址。</li>
+<li>用户输入微信账号和密码，登录成功后，需要选择具体的授权范围，如：授权用户的头像、昵称等。</li>
+<li>授权之后，微信会根据拉起 <code>a.com?code=123</code> ，这时带上了一个临时票据 code。</li>
+<li>获取 code 之后， <code>a.com</code> 会拿着 code 、appid、appsecret，向微信服务器申请 token，验证成功后，微信会下发一个 token。</li>
+<li>有了 token 之后， <code>a.com</code> 就可以凭借 token 拿到对应的微信用户头像，用户昵称等信息了。</li>
+<li><code>a.com</code> 提示用户登录成功，并将登录状态写入 Cooke，以作为后续访问的凭证。</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文介绍了 4 种常见的登录方式，原理应该大家都清楚了，总结一下这 4 种方案的使用场景：</p>
+<ul>
+<li>Cookie + Session 历史悠久，适合于简单的后端架构，需开发人员自己处理好安全问题。</li>
+<li>Token 方案对后端压力小，适合大型分布式的后端架构，但已分发出去的 token ，如果想收回权限，就不是很方便了。</li>
+<li>SSO 单点登录，适用于中大型企业，想要统一内部所有产品的登录方式。</li>
+<li>OAuth 第三方登录，简单易用，对用户和开发者都友好，但第三方平台很多，需要选择合适自己的第三方登录平台。</li>
+</ul>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%85%B6%E4%BB%96/">其他</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E9%89%B4%E6%9D%83/">鉴权</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/18/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浏览器的同源策略</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/17/HTTP%E7%BC%93%E5%AD%98/">
+                        <span class="hidden-mobile">HTTP缓存</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "登录鉴权&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
