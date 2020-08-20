@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="huyinglin">
   <meta name="keywords" content="">
-  <title>HTTPS - Faz Blog</title>
+  <title>V8是如何实现函数的？ - Faz Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 
@@ -136,8 +136,8 @@
               
   <div class="mt-3 post-meta">
     <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-    <time datetime="2020-08-18 16:02" pubdate>
-      2020年8月18日 下午
+    <time datetime="2020-08-20 17:29" pubdate>
+      2020年8月20日 下午
     </time>
   </div>
 
@@ -147,7 +147,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.8k 字
+      1.4k 字
     </span>
   
 
@@ -157,7 +157,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      18
+      14
        分钟
     </span>
   
@@ -187,52 +187,66 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto" id="post">
             <!-- SEO header -->
-            <h1 style="display: none">HTTPS</h1>
+            <h1 style="display: none">V8是如何实现函数的？</h1>
             
             <div class="markdown-body" id="post-body">
-              <p>谈到HTTPS, 就不得不谈到与之相对的HTTP。HTTP的特性是明文传输，因此在传输的每一个环节，数据都有可能被第三方窃取或者篡改，具体来说，HTTP 数据经过 TCP 层，然后经过WIFI路由器、运营商和目标服务器，这些环节中都可能被中间人拿到数据并进行篡改，也就是我们常说的中间人攻击。</p>
-<p>为了防范这样一类攻击，我们不得已要引入新的加密方案，即 HTTPS。</p>
-<p>HTTPS并不是一个新的协议, 而是一个加强版的HTTP。其原理是在HTTP和TCP之间建立了一个中间层，当HTTP和TCP通信时并不是像以前那样直接通信，直接经过了一个中间层进行加密，将加密后的数据包传给TCP, 响应的，TCP必须将数据包解密，才能传给上面的HTTP。这个中间层也叫安全层。安全层的核心就是对数据加解密。</p>
-<p>接下来我们就来剖析一下HTTPS的加解密是如何实现的。</p>
-<h2 id="对称加密和非对称加密"><a href="#对称加密和非对称加密" class="headerlink" title="对称加密和非对称加密"></a>对称加密和非对称加密</h2><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>首先需要理解<code>对称加密</code>和<code>非对称加密</code>的概念，然后讨论两者应用后的效果如何。</p>
-<p><code>对称加密</code>是最简单的方式，指的是<code>加密</code>和<code>解密</code>用的是<strong>同样的密钥</strong>。</p>
-<p>而对于非对称加密，<strong>如果有 A、 B 两把密钥，如果用 A 加密过的数据包只能用 B 解密，反之，如果用 B 加密过的数据包只能用 A 解密。</strong></p>
-<h3 id="加解密过程"><a href="#加解密过程" class="headerlink" title="加解密过程"></a>加解密过程</h3><p>接着我们来谈谈<code>浏览器</code>和<code>服务器</code>进行协商加解密的过程。</p>
-<p>首先，浏览器会给服务器发送一个随机数<code>client_random</code> 和一个加密的方法列表。</p>
-<p>服务器接收后给浏览器返回另一个随机数<code>server_random</code>和加密方法。</p>
-<p>现在，两者拥有三样相同的凭证: <code>client_random</code>、<code>server_random</code>和加密方法。</p>
-<p>接着用这个加密方法将两个随机数混合起来生成密钥，这个密钥就是浏览器和服务端通信的<code>暗号</code>。</p>
-<h3 id="各自应用的效果"><a href="#各自应用的效果" class="headerlink" title="各自应用的效果"></a>各自应用的效果</h3><p>如果用<code>对称加密</code>的方式，那么第三方可以在中间获取到<code>client_random</code>、<code>server_random</code>和加密方法，由于这个加密方法同时可以解密，所以中间人可以成功对暗号进行解密，拿到数据，很容易就将这种加密方式破解了。</p>
-<p>那能不能只用<code>非对称加密</code>呢？理论上是可以的，但实际上非对称加密需要的计算量非常大，对于稍微大一点的数据即使用最快的处理器也非常耗时。后面有机会给大家分享一下 RSA 非对称加密算法的原理，大家就会有更加直观的认识，这里我们先不深究。</p>
-<h2 id="对称加密和非对称加密的结合"><a href="#对称加密和非对称加密的结合" class="headerlink" title="对称加密和非对称加密的结合"></a>对称加密和非对称加密的结合</h2><p>可以发现，对称加密和非对称加密，只用前者会有安全隐患，只用后者性能消耗又太大。那我们能不能把两者结合，保证性能的同时又能保证安全呢？</p>
-<p>其实是可以的，演示一下整个流程：</p>
-<ol>
-<li>浏览器向服务器发送<code>client_random</code>和加密方法列表。</li>
-<li>服务器接收到，返回<code>server_random</code>、加密方法以及公钥。</li>
-<li>浏览器接收，接着生成另一个随机数<code>pre_random</code>, 并且用公钥加密，传给服务器。(敲黑板！重点操作！)</li>
-<li>服务器用公钥解密这个被加密后的<code>pre_random</code>。</li>
-</ol>
-<p>现在浏览器和服务器有三样相同的凭证:<code>client_random</code>、<code>server_random</code>和<code>pre_random</code>。然后两者用相同的加密方法混合这三个随机数，生成最终的<code>密钥</code>。</p>
-<p>然后浏览器和服务器尽管用一样的密钥进行通信，即使用<code>对称加密</code>。</p>
-<p>这个最终的密钥是很难被中间人拿到的，为什么呢? 因为中间人没有私钥，从而拿不到pre_random，也就无法生成最终的密钥了。</p>
-<p>回头比较一下和单纯的使用非对称加密, 这种方式做了什么改进呢？本质上是防止了私钥加密的数据外传。单独使用非对称加密，最大的漏洞在于服务器传数据给浏览器只能用私钥加密，这是危险产生的根源。利用对称和非对称加密结合的方式，就防止了这一点，从而保证了安全。</p>
-<h2 id="添加数字证书"><a href="#添加数字证书" class="headerlink" title="添加数字证书"></a>添加数字证书</h2><p>尽管通过两者加密方式的结合，能够很好地实现加密传输，但实际上还是存在一些问题。黑客如果采用 DNS 劫持，将目标地址替换成黑客服务器的地址，然后黑客自己造一份公钥和私钥，照样能进行数据传输。而对于浏览器用户而言，他是不知道自己正在访问一个危险的服务器的。</p>
-<p>事实上HTTPS在上述结合对称和非对称加密的基础上，又添加了数字证书认证的步骤。其目的就是让服务器证明自己的身份。</p>
-<h3 id="传输过程"><a href="#传输过程" class="headerlink" title="传输过程"></a>传输过程</h3><p>为了获取这个证书，服务器运营者需要向第三方认证机构获取授权，这个第三方机构也叫CA(Certificate Authority), 认证通过后 CA 会给服务器颁发数字证书。</p>
-<p>这个数字证书有两个作用:</p>
-<ol>
-<li>服务器向浏览器证明自己的身份。</li>
-<li>把公钥传给浏览器。</li>
-</ol>
-<p>这个验证的过程发生在什么时候呢？</p>
-<p>当服务器传送server_random、加密方法的时候，顺便会带上数字证书(包含了公钥), 接着浏览器接收之后就会开始验证数字证书。如果验证通过，那么后面的过程照常进行，否则拒绝执行。</p>
-<p>现在我们来梳理一下HTTPS最终的加解密过程:</p>
-<img src="/2020/08/18/HTTPS/img.png" srcset="/img/loading.gif" class="">
+              <p>如果你熟悉了一门其他流行语言，再来使用 JavaScript，那么 JavaScript 中的函数可能会给你造成一些误解，比如在 JavaScript 中，你可以<strong>将一个函数赋值给一个变量</strong>，还可以<strong>将函数作为一个参数传递给另外一个函数</strong>，甚至可以使得<strong>一个函数返回另外一个函数</strong>，这在一些主流语言中都很难实现。</p>
+<p>JavaScript 中的函数非常灵活，其根本原因在于 JavaScript 中的<strong>函数就是一种特殊的对象</strong>，我们把 JavaScript 中的函数称为**一等公民 (First Class Function)**。</p>
+<p>基于函数是一等公民的设计，使得 JavaScript 非常容易实现一些特性，比如闭包，还有函数式编程等，而其他语言要实现这些特性就显得比较困难，比如要在 C++ 中实现闭包需要实现大量复杂的代码，而且使用起来也异常复杂。</p>
+<p>今天我们就来看一下 V8 是如何实现函数的。</p>
+<h2 id="函数的本质"><a href="#函数的本质" class="headerlink" title="函数的本质"></a>函数的本质</h2><p>我们先来看一段代码：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">foo</span>(<span class="hljs-params"></span>)</span>&#123;
+    <span class="hljs-keyword">var</span> test = <span class="hljs-number">1</span>
+&#125;
+foo.myName = <span class="hljs-number">1</span>
+foo.uName = <span class="hljs-number">2</span>
+<span class="hljs-built_in">console</span>.log(foo.myName) <span class="hljs-comment">// output: 1</span></code></pre>
 
-<h3 id="认证过程"><a href="#认证过程" class="headerlink" title="认证过程"></a>认证过程</h3><p>浏览器拿到数字证书后，如何来对证书进行认证呢？</p>
-<p>首先，会读取证书中的明文内容。CA 进行数字证书的签名时会保存一个 Hash 函数，来这个函数来计算明文内容得到<code>信息A</code>，然后用公钥解密明文内容得到<code>信息B</code>，两份信息做比对，一致则表示认证合法。</p>
-<p>当然有时候对于浏览器而言，它不知道哪些 CA 是值得信任的，因此会继续查找 CA 的上级 CA，以同样的信息比对方式验证上级 CA 的合法性。一般根级的 CA 会内置在操作系统当中，当然如果向上找没有找到根级的 CA，那么将被视为不合法。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>HTTPS并不是一个新的协议, 它在HTTP和TCP的传输中建立了一个安全层，利用对称加密和非对称机密结合数字证书认证的方式，让传输过程的安全性大大提高。</p>
+<p>这段代码的打印结果是 1。也许你会好奇，一个函数竟然可以像对象那样被 set 值，还能读取这个值。如果隐藏掉 foo 的函数声明，可以会觉得 foo 是个对象。</p>
+<p>虽然在实际开发中我们不会这么写，但是函数确实有对象的特性。其实数组也可以这样写，把 foo 的函数声明改成数组声明也是可以执行的。之所以可以函数和数组有函数的特性，是因为它们都继承自函数，底层的实现也都是函数。对，你没有听错，<strong>函数和数组的底层实现其实是对象</strong>。不过它们都是特殊的对象。</p>
+<p>在 V8 内部，会问函数对象添加两个隐藏属性，name 和 code。在 ES6 中函数的 name 属性已经可以被访问。具体属性如下：</p>
+<img src="/2020/08/20/V8%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0%E7%9A%84%EF%BC%9F/img.png" srcset="/img/loading.gif" class="">
+
+<p>也就是说，函数除了可以拥有常用类型的属性值之外，还拥有两个隐藏属性，分别是 <strong>name 属性和 code 属性</strong>。</p>
+<p>如果这个函数没有函数名，那么 name 属性值就是 anonymous。<strong>函数的具体内容是以字符串的形式存储在 code 属性中</strong>。当执行到一个函数的调用语句时，V8 便会从函数对象中取出 code 属性值，也就是函数代码，然后再解释执行这段代码。</p>
+<h2 id="函数的调用管理"><a href="#函数的调用管理" class="headerlink" title="函数的调用管理"></a>函数的调用管理</h2><p>大部分高级语言都是采用<strong>栈</strong>这种数据结构来管理函数调用，为什么呢？这与函数的特性有关。通常函数有两个主要的特征：</p>
+<ol>
+<li><strong>函数可以被调用</strong>。你可以在一个函数中调用另外一个函数，当函数调用发生时，执行代码的控制权将从父函数转移到子函数，子函数执行结束后，又会将代码执行控制权返还给父函数。</li>
+<li><strong>函数具有作用域机制</strong>。所谓作用域机制，是指函数在执行的时候可以将定义在函数内部的变量和外部环境隔离，在函数内部定义的变量我们也称为<strong>临时变量</strong>，临时变量只能在该函数内部访问，函数之外通常无权访问。当函数执行结束之后，存放在内存中的变量也随之被销毁。</li>
+</ol>
+<p>我们来看下面的代码：</p>
+<pre><code class="hljs jsx"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getZ</span>(<span class="hljs-params"></span>) </span>&#123;
+    <span class="hljs-keyword">return</span> <span class="hljs-number">4</span>;
+&#125;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">add</span>(<span class="hljs-params">x, y</span>) </span>&#123;
+    <span class="hljs-keyword">const</span> z = getZ();
+    <span class="hljs-keyword">return</span> x + y + z;
+&#125;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">main</span>(<span class="hljs-params"></span>) </span>&#123;
+    <span class="hljs-keyword">const</span> x = <span class="hljs-number">5</span>;
+    <span class="hljs-keyword">const</span> y = <span class="hljs-number">6</span>;
+    <span class="hljs-keyword">const</span> ret = add(x, y);
+&#125;</code></pre>
+
+<p>上面代码中包含了多层函数嵌套调用。我们来分析一下 main 函数的执行流程。</p>
+<ol>
+<li>首先 main 函数中有先是声明了两个变量。</li>
+<li>然后执行 add 函数，于是将代码控制权交给 add 函数。</li>
+<li>然后在 add 函数中又需要执行 getZ 函数，需要将代码控制权交给 getZ 函数。</li>
+<li>getZ 函数执行完之后，将控制权返还给 add 函数。</li>
+<li>add 函数执行完之后，又将控制权交给 main 函数。</li>
+<li>main 函数继续向下执行。</li>
+</ol>
+<p>通过上述分析，我们可以得出，<strong>函数调用者的生命周期总是长于被调用者（后进），并且被调用者的生命周期总是先于调用者的生命周期结束 (先出)。</strong></p>
+<p>在执行上述流程时，各个函数的生命周期如下图所示：</p>
+<img src="/2020/08/20/V8%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0%E7%9A%84%EF%BC%9F/img1.png" srcset="/img/loading.gif" class="">
+
+<p>因为函数是有作用域机制的，作用域机制通常表现在函数执行时，会在内存中分配函数内部的变量、上下文等数据，在函数执行完成之后，这些内部数据会被销毁掉。所以站在函数资源分配和回收角度来看，被调用函数的资源分配总是晚于调用函数 (后进)，而函数资源的释放则总是先于调用函数 (先出)。如下图所示：</p>
+<img src="/2020/08/20/V8%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%87%BD%E6%95%B0%E7%9A%84%EF%BC%9F/img2.png" srcset="/img/loading.gif" class="">
+
+<p>通过观察函数的生命周期和函数的资源分配情况，我们发现，它们都符合<strong>后进先出 (LIFO)</strong> 的策略，而栈结构正好满足这种后进先出 (LIFO) 的需求，所以我们选择栈来管理函数调用关系是一种很自然的选择。</p>
 
             </div>
             <hr>
@@ -242,7 +256,7 @@
                   <div class="post-meta mr-3">
                     <i class="iconfont icon-category"></i>
                     
-                      <a class="hover-with-bg" href="/categories/HTTP/">HTTP</a>
+                      <a class="hover-with-bg" href="/categories/V8/">V8</a>
                     
                   </div>
                 
@@ -250,9 +264,11 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/HTTP/">HTTP</a>
+                      <a class="hover-with-bg" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a>
                     
-                      <a class="hover-with-bg" href="/tags/%E5%AE%89%E5%85%A8/">安全</a>
+                      <a class="hover-with-bg" href="/tags/JavaScript/">JavaScript</a>
+                    
+                      <a class="hover-with-bg" href="/tags/V8/">V8</a>
                     
                   </div>
                 
@@ -263,18 +279,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2020/08/18/V8%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%AF%B9%E8%B1%A1%E7%9A%84%EF%BC%9F/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">V8是如何实现对象的？</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2020/08/18/%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AE%89%E5%85%A8/">
-                        <span class="hidden-mobile">浏览器安全</span>
+                      <a href="/2020/08/18/V8%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%AF%B9%E8%B1%A1%E7%9A%84%EF%BC%9F/">
+                        <span class="hidden-mobile">V8是如何实现对象的？</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
@@ -413,7 +423,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "HTTPS&nbsp;",
+        "V8是如何实现函数的？&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
